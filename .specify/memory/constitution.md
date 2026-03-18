@@ -1,50 +1,154 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+  Sync Impact Report
+  ==================
+  Version change: (template) → 1.0.0
+  Bump rationale: Initial ratification — MAJOR version 1.0.0.
+
+  Modified principles:
+    - [PRINCIPLE_1_NAME] → I. Coding Standards (new)
+    - [PRINCIPLE_2_NAME] → II. Architecture (new)
+    - [PRINCIPLE_3_NAME] → III. Testing (new)
+    - [PRINCIPLE_4_NAME] → IV. CI/CD and Collaboration (new)
+    - [PRINCIPLE_5_NAME] → V. AI Agent Governance (new)
+
+  Added sections:
+    - Project Identity (preamble)
+    - Documentation
+    - Extensibility Contract
+    - Governance
+
+  Removed sections: (none — initial creation)
+
+  Templates requiring updates:
+    - .specify/templates/plan-template.md ✅ no update needed
+      (Constitution Check section is dynamically filled at plan time)
+    - .specify/templates/spec-template.md ✅ no update needed
+      (generic spec structure, no constitution-specific references)
+    - .specify/templates/tasks-template.md ✅ no update needed
+      (generic task structure, no constitution-specific references)
+
+  Follow-up TODOs: (none)
+-->
+
+# FoundryAgent Automation Constitution
+
+This project builds and operates production-grade AI Agents
+using Azure AI Foundry. All decisions MUST prioritize developer
+experience, reliability, and safe production deployments.
+
+This constitution applies to all contributors, human and AI.
+It MUST guide all `/specify`, `/plan`, and `/tasks` outputs
+for this project.
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Coding Standards
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+- Python is the primary language. All code MUST be typed,
+  linted, and formatted.
+- Code MUST be readable by a developer unfamiliar with the
+  codebase — clarity beats cleverness.
+- Every public function, class, and module MUST have a
+  docstring.
+- Secrets and credentials MUST never be hardcoded — always
+  sourced from environment variables or a secrets manager.
+- Feature flags MUST be used to gate incomplete or optional
+  capabilities rather than commenting out code.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Architecture
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+- Infrastructure MUST be declarative and version-controlled
+  alongside code.
+- All environments (dev, qa, prod) MUST be structurally
+  identical — differences are configuration only.
+- The same codebase MUST be deployable to all environments
+  using configuration and IaC, without environment-specific
+  code forks.
+- No manual changes to any environment. Everything goes
+  through CI/CD.
+- Design for extensibility: new capabilities (e.g. knowledge
+  sources, new tools) MUST be addable without restructuring
+  existing code.
+- Prefer managed Azure services over self-hosted equivalents.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Testing
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+- Every agent behaviour that can be asserted MUST have a test.
+- Unit tests MUST NOT require live Azure credentials.
+- Integration tests MUST be clearly separated from unit tests
+  and skippable in environments where Azure credentials are
+  unavailable.
+- A pull request MUST NOT be merged if tests are failing.
+- Tests are first-class code — they follow the same quality
+  standards as production code.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. CI/CD and Collaboration
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+- All deployments are automated. No human manually runs
+  deployment scripts.
+- Production deployments require explicit human approval.
+- Every deployment to every environment runs the test suite
+  first.
+- Deployments MUST be idempotent — running the same pipeline
+  twice MUST produce the same result.
+- Credentials for CI/CD MUST use short-lived tokens (OIDC) —
+  no long-lived secrets in pipelines.
+- The main branch is always deployable.
+- All work happens on feature branches and enters main via
+  pull request.
+- Pull requests require at least one review before merging.
+- Commit messages MUST be descriptive and reference the
+  relevant issue or spec where applicable.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. AI Agent Governance
+
+- Agents MUST have explicit, version-controlled instructions.
+- Agent behaviour changes (instructions, tools, model) are
+  treated as code changes — reviewed and deployed through the
+  same pipeline.
+- Agents MUST be testable in isolation before being deployed
+  to higher environments.
+- The initial agent design MUST work without custom knowledge
+  sources; knowledge integration is an optional extension, not
+  a prerequisite.
+
+## Documentation
+
+- Every feature MUST include a notebook-based walkthrough for
+  user onboarding.
+- READMEs MUST be kept current — outdated documentation is
+  treated as a bug.
+- Architecture decisions MUST be recorded with their
+  rationale, not just the outcome.
+- Notebooks are written for a developer new to the project —
+  assume no prior context.
+- Documentation is expected to evolve with the system, but
+  constitutional principles MUST remain stable and only change
+  through deliberate revision.
+
+## Extensibility Contract
+
+- Optional capabilities MUST have clearly marked integration
+  points in the codebase, even before they are implemented.
+- Removing or renaming an integration point is a breaking
+  change and requires explicit agreement.
+- The knowledge source integration point is a reserved
+  extension — its placeholder MUST be preserved until it is
+  fully implemented.
+- Any future knowledge integration MUST be configurable per
+  environment, added without breaking existing agent
+  behaviours, and expressed as data/config plus SDK-based
+  wiring, not hard-coded logic.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- This constitution supersedes all other practices when in
+  conflict.
+- Amendments require documentation, review, and approval
+  before taking effect.
+- All PRs and reviews MUST verify compliance with these
+  principles.
+- Complexity MUST be justified — default to the simplest
+  approach that satisfies the constraint.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-18
