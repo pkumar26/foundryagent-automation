@@ -1,0 +1,145 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        type: choice
+        options:
+          - dev
+          - qa
+          - prod
+      infra_tool:
+        description: "Infrastructure tool"
+        type: choice
+        options:
+          - terraform
+          - bicep
+      use_existing_foundry:
+        description: "Use existing Foundry project"
+        type: choice
+        options:
+          - "true"
+          - "false"
+        default: "true"
+      agent_target:
+        description: "Agent to deploy (name or 'all')"
+        type: string
+        default: "all"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
+    env:
+      ENVIRONMENT: ${{ inputs.environment || 'dev' }}
+      INFRA_TOOL: ${{ inputs.infra_tool || 'terraform' }}
+      USE_EXISTING_FOUNDRY: ${{ inputs.use_existing_foundry || 'true' }}
+      AGENT_TARGET: ${{ inputs.agent_target || 'all' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Stage 1: Validate inputs
+      - name: Validate agent target
+        run: |
+          if [ "$AGENT_TARGET" != "all" ]; then
+            python -c "
+          from agents.registry import REGISTRY
+          try:
+              REGISTRY.get_agent('$AGENT_TARGET')
+              print(f'[validate] Agent \\'$AGENT_TARGET\\' found in registry')
+          except KeyError as e:
+              print(f'[validate] ✗ {e}')
+              exit(1)
+          "
+          else
+            echo "[validate] Deploying all agents"
+          fi
+
+      # Stage 2-3: Azure login via OIDC
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Stage 2: Provision shared infrastructure
+      - name: Provision shared infra (Terraform)
+        if: env.INFRA_TOOL == 'terraform'
+        working-directory: infra/terraform
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          terraform init
+          terraform apply -auto-approve -var-file=envs/${{ env.ENVIRONMENT }}.tfvars
+
+      - name: Provision shared infra (Bicep)
+        if: env.INFRA_TOOL == 'bicep'
+        uses: azure/arm-deploy@v2
+        with:
+          scope: subscription
+          region: ${{ vars.AZURE_REGION }}
+          template: infra/bicep/main.bicep
+          parameters: infra/bicep/parameters/${{ env.ENVIRONMENT }}.bicepparam
+
+      # Stage 3: Provision Foundry (conditional)
+      # Foundry provisioning is handled within main.tf/main.bicep via use_existing_foundry flag
+
+      # Stage 4: Export outputs
+      - name: Set connection string from secret (existing Foundry)
+        if: env.USE_EXISTING_FOUNDRY == 'true'
+        run: echo "FOUNDRY_PROJECT_CONNECTION_STRING=${{ secrets.FOUNDRY_PROJECT_CONNECTION_STRING }}" >> $GITHUB_ENV
+
+      - name: Set connection string from Terraform output (new Foundry)
+        if: env.USE_EXISTING_FOUNDRY == 'false' && env.INFRA_TOOL == 'terraform'
+        working-directory: infra/terraform
+        run: |
+          CONN_STR=$(terraform output -raw project_connection_string)
+          echo "FOUNDRY_PROJECT_CONNECTION_STRING=${CONN_STR}" >> $GITHUB_ENV
+
+      - name: Set connection string from Bicep output (new Foundry)
+        if: env.USE_EXISTING_FOUNDRY == 'false' && env.INFRA_TOOL == 'bicep'
+        run: |
+          echo "FOUNDRY_PROJECT_CONNECTION_STRING=${{ steps.deploy-bicep.outputs.projectConnectionString }}" >> $GITHUB_ENV
+
+      # Stage 5: Deploy agents
+      - name: Deploy agents
+        env:
+          FOUNDRY_PROJECT_CONNECTION_STRING: ${{ env.FOUNDRY_PROJECT_CONNECTION_STRING }}
+        run: |
+          if [ "$AGENT_TARGET" = "all" ]; then
+            python scripts/deploy_agent.py --all
+          else
+            python scripts/deploy_agent.py --agent "$AGENT_TARGET"
+          fi
+
+      # Stage 6: Integration tests
+      - name: Install test dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run integration tests
+        env:
+          FOUNDRY_PROJECT_CONNECTION_STRING: ${{ env.FOUNDRY_PROJECT_CONNECTION_STRING }}
+        run: pytest tests/ -m integration -v

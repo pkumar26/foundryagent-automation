@@ -29,10 +29,10 @@
 
 **Purpose**: Create the project skeleton, dependency files, and tooling configuration
 
-- [ ] T001 Create full project directory structure with all __init__.py files per plan.md (agents/_base/, agents/_base/tools/, agents/<agent-1>/, agents/<agent-1>/tools/, agents/<agent-1>/integrations/, agents/<agent-2>/, agents/<agent-2>/tools/, agents/<agent-2>/integrations/, infra/terraform/, infra/terraform/envs/, infra/bicep/, infra/bicep/modules/, infra/bicep/parameters/, tests/_base/, tests/<agent-1>/, tests/<agent-2>/, notebooks/, scripts/, .github/workflows/)
-- [ ] T002 [P] Initialize Python project with pyproject.toml (metadata, Black/isort config) and dependency files requirements.txt (azure-ai-projects, azure-identity, pydantic-settings) and requirements-dev.txt (pytest, pytest-asyncio, black, isort, flake8) at project root
-- [ ] T003 [P] Create .env.example listing all environment variables (FOUNDRY_PROJECT_CONNECTION_STRING, ENVIRONMENT, AZURE_KEY_VAULT_NAME, AGENT_NAME, AGENT_MODEL, KNOWLEDGE_SOURCE_ENABLED, GITHUB_MCP_ENABLED, AZURE_AI_SEARCH_ENDPOINT, AZURE_AI_SEARCH_INDEX_NAME, GITHUB_MCP_ENDPOINT, GITHUB_MCP_TOKEN_SECRET_NAME) at project root
-- [ ] T004 [P] Create .flake8 configuration file and .gitignore (Python, .env, __pycache__, .venv, *.tfstate, .terraform/, .idea/, .vscode/) at project root
+- [X] T001 Create full project directory structure with all __init__.py files per plan.md (agents/_base/, agents/_base/tools/, agents/<agent-1>/, agents/<agent-1>/tools/, agents/<agent-1>/integrations/, agents/<agent-2>/, agents/<agent-2>/tools/, agents/<agent-2>/integrations/, infra/terraform/, infra/terraform/envs/, infra/bicep/, infra/bicep/modules/, infra/bicep/parameters/, tests/_base/, tests/<agent-1>/, tests/<agent-2>/, notebooks/, scripts/, .github/workflows/)
+- [X] T002 [P] Initialize Python project with pyproject.toml (metadata, Black/isort config) and dependency files requirements.txt (azure-ai-projects, azure-identity, pydantic-settings) and requirements-dev.txt (pytest, pytest-asyncio, black, isort, flake8) at project root
+- [X] T003 [P] Create .env.example listing all environment variables (FOUNDRY_PROJECT_CONNECTION_STRING, ENVIRONMENT, AZURE_KEY_VAULT_NAME, AGENT_NAME, AGENT_MODEL, KNOWLEDGE_SOURCE_ENABLED, GITHUB_MCP_ENABLED, AZURE_AI_SEARCH_ENDPOINT, AZURE_AI_SEARCH_INDEX_NAME, GITHUB_MCP_ENDPOINT, GITHUB_MCP_TOKEN_SECRET_NAME) at project root
+- [X] T004 [P] Create .flake8 configuration file and .gitignore (Python, .env, __pycache__, .venv, *.tfstate, .terraform/, .idea/, .vscode/) at project root
 
 ---
 
@@ -42,11 +42,11 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 [P] Implement FoundryBaseConfig using pydantic-settings BaseSettings with fields (foundry_project_connection_string, environment, azure_key_vault_name) and .env file support in agents/_base/config.py
-- [ ] T006 [P] Implement singleton AIProjectClient initialisation using DefaultAzureCredential and connection string from config in agents/_base/client.py
-- [ ] T007 Implement AgentRegistryEntry dataclass and AgentRegistry class with list_agents(), get_agent(name), validate() per registry contract in agents/registry.py
-- [ ] T008 Implement create_or_update_agent() with idempotent create-or-update pattern (list agents → find by name → create or update), instructions file loading, tool collection, and conditional integration tool appending per factory contract in agents/_base/agent_factory.py
-- [ ] T009 [P] Create shared tool utilities module with FunctionTool helper in agents/_base/tools/__init__.py
+- [X] T005 [P] Implement FoundryBaseConfig using pydantic-settings BaseSettings with fields (foundry_project_connection_string, environment, azure_key_vault_name) and .env file support in agents/_base/config.py
+- [X] T006 [P] Implement singleton AIProjectClient initialisation using DefaultAzureCredential and connection string from config in agents/_base/client.py
+- [X] T007 Implement AgentRegistryEntry dataclass and AgentRegistry class with list_agents(), get_agent(name), validate() per registry contract in agents/registry.py
+- [X] T008 Implement create_or_update_agent() with idempotent create-or-update pattern (list agents → find by name → create or update), instructions file loading, tool collection, and conditional integration tool appending per factory contract in agents/_base/agent_factory.py
+- [X] T009 [P] Create shared tool utilities module with FunctionTool helper in agents/_base/tools/__init__.py
 
 **Checkpoint**: Foundation ready — user story implementation can now begin in parallel
 
@@ -60,14 +60,14 @@
 
 ### Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Create first agent config subclass extending FoundryBaseConfig with agent_name, agent_model, agent_instructions_path defaults in agents/<agent-1>/config.py
-- [ ] T011 [P] [US1] Write first agent system instructions as versioned markdown in agents/<agent-1>/instructions.md
-- [ ] T012 [P] [US1] Implement sample function tool (e.g., greeting or echo) using FunctionTool pattern in agents/<agent-1>/tools/sample_tool.py
-- [ ] T013 [P] [US1] Create knowledge source integration stub returning None when KNOWLEDGE_SOURCE_ENABLED is false with get_knowledge_tool(config) signature in agents/<agent-1>/integrations/knowledge.py
-- [ ] T014 [P] [US1] Create GitHub MCP integration stub returning None when GITHUB_MCP_ENABLED is false with get_github_mcp_tool(config) signature in agents/<agent-1>/integrations/github_mcp.py
-- [ ] T015 [US1] Register first agent as AgentRegistryEntry in REGISTRY within agents/registry.py
-- [ ] T016 [US1] Implement deploy CLI script with argparse (--agent <name>, --all, mutually exclusive), registry resolution, per-agent error isolation, and summary output per deploy-script contract in scripts/deploy_agent.py
-- [ ] T017 [US1] Implement run lifecycle helper with create_thread, send_message, create_and_process_run, retrieve_response, and failure/cancellation handling with configurable timeout (default 120s) in agents/_base/run.py
+- [X] T010 [P] [US1] Create first agent config subclass extending FoundryBaseConfig with agent_name, agent_model, agent_instructions_path defaults in agents/<agent-1>/config.py
+- [X] T011 [P] [US1] Write first agent system instructions as versioned markdown in agents/<agent-1>/instructions.md
+- [X] T012 [P] [US1] Implement sample function tool (e.g., greeting or echo) using FunctionTool pattern in agents/<agent-1>/tools/sample_tool.py
+- [X] T013 [P] [US1] Create knowledge source integration stub returning None when KNOWLEDGE_SOURCE_ENABLED is false with get_knowledge_tool(config) signature in agents/<agent-1>/integrations/knowledge.py
+- [X] T014 [P] [US1] Create GitHub MCP integration stub returning None when GITHUB_MCP_ENABLED is false with get_github_mcp_tool(config) signature in agents/<agent-1>/integrations/github_mcp.py
+- [X] T015 [US1] Register first agent as AgentRegistryEntry in REGISTRY within agents/registry.py
+- [X] T016 [US1] Implement deploy CLI script with argparse (--agent <name>, --all, mutually exclusive), registry resolution, per-agent error isolation, and summary output per deploy-script contract in scripts/deploy_agent.py
+- [X] T017 [US1] Implement run lifecycle helper with create_thread, send_message, create_and_process_run, retrieve_response, and failure/cancellation handling with configurable timeout (default 120s) in agents/_base/run.py
 
 **Checkpoint**: At this point, a developer can deploy one agent and interact with it via the run helper. User Story 1 is fully functional and testable independently.
 
@@ -81,11 +81,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T018 [P] [US2] Create second agent config subclass with distinct agent_name and model defaults in agents/<agent-2>/config.py
-- [ ] T019 [P] [US2] Write second agent system instructions in agents/<agent-2>/instructions.md
-- [ ] T020 [P] [US2] Implement sample function tool with a different capability than agent-1 in agents/<agent-2>/tools/sample_tool.py
-- [ ] T021 [P] [US2] Create knowledge source and GitHub MCP integration stubs in agents/<agent-2>/integrations/knowledge.py and agents/<agent-2>/integrations/github_mcp.py
-- [ ] T022 [US2] Register second agent as AgentRegistryEntry in REGISTRY within agents/registry.py (single line addition, zero changes to agent-1)
+- [X] T018 [P] [US2] Create second agent config subclass with distinct agent_name and model defaults in agents/<agent-2>/config.py
+- [X] T019 [P] [US2] Write second agent system instructions in agents/<agent-2>/instructions.md
+- [X] T020 [P] [US2] Implement sample function tool with a different capability than agent-1 in agents/<agent-2>/tools/sample_tool.py
+- [X] T021 [P] [US2] Create knowledge source and GitHub MCP integration stubs in agents/<agent-2>/integrations/knowledge.py and agents/<agent-2>/integrations/github_mcp.py
+- [X] T022 [US2] Register second agent as AgentRegistryEntry in REGISTRY within agents/registry.py (single line addition, zero changes to agent-1)
 
 **Checkpoint**: At this point, two agents are independently deployable. `deploy_agent.py --all` deploys both. Adding agent required exactly two locations: the agent folder and one registry line (SC-002).
 
@@ -99,8 +99,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T023 [P] [US3] Create test pipeline with lint (Black --check, isort --check, flake8) and unit test (pytest -m "not integration") stages triggered on PR and push to main in .github/workflows/test.yml
-- [ ] T024 [US3] Create deploy pipeline with workflow_dispatch inputs (environment, infra_tool, use_existing_foundry, agent_target), OIDC auth via azure/login@v2, 6-stage pipeline (validate → provision shared infra → provision foundry → export outputs → deploy agents → integration tests), per-environment secrets, auto-deploy dev on push to main, prod approval gate per cicd-pipeline contract in .github/workflows/deploy.yml
+- [X] T023 [P] [US3] Create test pipeline with lint (Black --check, isort --check, flake8) and unit test (pytest -m "not integration") stages triggered on PR and push to main in .github/workflows/test.yml
+- [X] T024 [US3] Create deploy pipeline with workflow_dispatch inputs (environment, infra_tool, use_existing_foundry, agent_target), OIDC auth via azure/login@v2, 6-stage pipeline (validate → provision shared infra → provision foundry → export outputs → deploy agents → integration tests), per-environment secrets, auto-deploy dev on push to main, prod approval gate per cicd-pipeline contract in .github/workflows/deploy.yml
 
 **Checkpoint**: At this point, CI/CD is fully automated. Dev deploys on push, qa/prod via manual dispatch. OIDC auth, no client secrets (SC-007).
 
@@ -114,8 +114,8 @@
 
 ### Implementation for User Story 4
 
-- [ ] T025 [P] [US4] Create setup-and-connect notebook with configurable AGENT_NAME variable, Mode A (existing Foundry) and Mode B (new Foundry) sections, AIProjectClient initialisation, and connection verification in notebooks/01_setup_and_connect.ipynb
-- [ ] T026 [P] [US4] Create build-and-run-agent notebook with agent creation, thread creation, message posting, run execution, response display, and function tool demonstration — agent-agnostic via top-level AGENT_NAME variable — in notebooks/02_build_and_run_agent.ipynb
+- [X] T025 [P] [US4] Create setup-and-connect notebook with configurable AGENT_NAME variable, Mode A (existing Foundry) and Mode B (new Foundry) sections, AIProjectClient initialisation, and connection verification in notebooks/01_setup_and_connect.ipynb
+- [X] T026 [P] [US4] Create build-and-run-agent notebook with agent creation, thread creation, message posting, run execution, response display, and function tool demonstration — agent-agnostic via top-level AGENT_NAME variable — in notebooks/02_build_and_run_agent.ipynb
 
 **Checkpoint**: At this point, onboarding notebooks are complete. A new developer can connect to Foundry and build an agent interactively (SC-006).
 
@@ -129,20 +129,20 @@
 
 ### Terraform Implementation
 
-- [ ] T027 [P] [US5] Create Terraform provider configuration (azurerm >= 4.0, required_version >= 1.5) with remote state backend (Azure Blob Storage) in infra/terraform/providers.tf
-- [ ] T028 [P] [US5] Create Terraform variable definitions (prefix, environment, use_existing_foundry, enable_knowledge_source, ci_principal_id, existing_foundry_connection_string) in infra/terraform/variables.tf
-- [ ] T029 [US5] Create Terraform main with resource group, Key Vault (always), conditional Foundry resource (azurerm_cognitive_account kind=AIServices with custom_subdomain_name), conditional AI Search, and RBAC role assignments (Contributor on RG, Cognitive Services User on Foundry, Key Vault Secrets User on KV) using {prefix}-{resource}-{env} naming in infra/terraform/main.tf
-- [ ] T030 [P] [US5] Create Terraform outputs (project_connection_string, resource_group_name, key_vault_name) in infra/terraform/outputs.tf
-- [ ] T031 [P] [US5] Create environment-specific tfvars with appropriate prefix values in infra/terraform/envs/dev.tfvars, infra/terraform/envs/qa.tfvars, and infra/terraform/envs/prod.tfvars
+- [X] T027 [P] [US5] Create Terraform provider configuration (azurerm >= 4.0, required_version >= 1.5) with remote state backend (Azure Blob Storage) in infra/terraform/providers.tf
+- [X] T028 [P] [US5] Create Terraform variable definitions (prefix, environment, use_existing_foundry, enable_knowledge_source, ci_principal_id, existing_foundry_connection_string) in infra/terraform/variables.tf
+- [X] T029 [US5] Create Terraform main with resource group, Key Vault (always), conditional Foundry resource (azurerm_cognitive_account kind=AIServices with custom_subdomain_name), conditional AI Search, and RBAC role assignments (Contributor on RG, Cognitive Services User on Foundry, Key Vault Secrets User on KV) using {prefix}-{resource}-{env} naming in infra/terraform/main.tf
+- [X] T030 [P] [US5] Create Terraform outputs (project_connection_string, resource_group_name, key_vault_name) in infra/terraform/outputs.tf
+- [X] T031 [P] [US5] Create environment-specific tfvars with appropriate prefix values in infra/terraform/envs/dev.tfvars, infra/terraform/envs/qa.tfvars, and infra/terraform/envs/prod.tfvars
 
 ### Bicep Implementation
 
-- [ ] T032 [P] [US5] Create Bicep foundry-resource module (Microsoft.CognitiveServices/accounts@2024-10-01, kind AIServices, SystemAssigned identity, custom subdomain) in infra/bicep/modules/foundry-resource.bicep
-- [ ] T033 [P] [US5] Create Bicep foundry-project module for project within the Foundry resource in infra/bicep/modules/foundry-project.bicep
-- [ ] T034 [P] [US5] Create Bicep keyvault module (Microsoft.KeyVault/vaults@2023-07-01, RBAC authorization enabled) in infra/bicep/modules/keyvault.bicep
-- [ ] T035 [P] [US5] Create Bicep AI Search module (Microsoft.Search/searchServices, conditional on enableKnowledgeSource) in infra/bicep/modules/ai-search.bicep
-- [ ] T036 [US5] Create Bicep main orchestrator composing all modules with conditional Foundry provisioning, {prefix}-{resource}-{env} naming, RBAC role assignments, and outputs (projectConnectionString, resourceGroupName, keyVaultName) in infra/bicep/main.bicep
-- [ ] T037 [P] [US5] Create environment-specific bicepparam files with appropriate prefix values in infra/bicep/parameters/dev.bicepparam, infra/bicep/parameters/qa.bicepparam, and infra/bicep/parameters/prod.bicepparam
+- [X] T032 [P] [US5] Create Bicep foundry-resource module (Microsoft.CognitiveServices/accounts@2024-10-01, kind AIServices, SystemAssigned identity, custom subdomain) in infra/bicep/modules/foundry-resource.bicep
+- [X] T033 [P] [US5] Create Bicep foundry-project module for project within the Foundry resource in infra/bicep/modules/foundry-project.bicep
+- [X] T034 [P] [US5] Create Bicep keyvault module (Microsoft.KeyVault/vaults@2023-07-01, RBAC authorization enabled) in infra/bicep/modules/keyvault.bicep
+- [X] T035 [P] [US5] Create Bicep AI Search module (Microsoft.Search/searchServices, conditional on enableKnowledgeSource) in infra/bicep/modules/ai-search.bicep
+- [X] T036 [US5] Create Bicep main orchestrator composing all modules with conditional Foundry provisioning, {prefix}-{resource}-{env} naming, RBAC role assignments, and outputs (projectConnectionString, resourceGroupName, keyVaultName) in infra/bicep/main.bicep
+- [X] T037 [P] [US5] Create environment-specific bicepparam files with appropriate prefix values in infra/bicep/parameters/dev.bicepparam, infra/bicep/parameters/qa.bicepparam, and infra/bicep/parameters/prod.bicepparam
 
 **Checkpoint**: At this point, both Terraform and Bicep produce identical Azure environments (SC-005). Switching between use-existing and create-new requires a single boolean (SC-008).
 
@@ -156,19 +156,19 @@
 
 ### Implementation for User Story 6
 
-- [ ] T038 [P] [US6] Create root conftest with shared fixtures (mock_config, mock_client, mock_agents_client) and pytest markers registration (integration, agent_1, agent_2) in tests/conftest.py
-- [ ] T039 [P] [US6] Create unit tests for FoundryBaseConfig (env var loading, defaults, validation) with mocked env vars in tests/_base/test_config.py
-- [ ] T040 [P] [US6] Create unit tests for AIProjectClient singleton init (credential handling, connection string) with mocked SDK in tests/_base/test_client.py
-- [ ] T041 [P] [US6] Create unit tests for create_or_update_agent (create path, update path, missing instructions, empty instructions, conditional tool appending, edge cases: invalid connection string error, empty registry warning, concurrent deploy idempotency) with mocked agents_client in tests/_base/test_agent_factory.py
-- [ ] T042 [P] [US6] Create agent-1 conftest with agent-specific fixtures and @pytest.mark.agent_1 marker in tests/<agent-1>/conftest.py
-- [ ] T043 [P] [US6] Create unit tests for agent-1 tools (function input/output, edge cases) in tests/<agent-1>/test_tools.py
-- [ ] T044 [US6] Create integration tests for agent create/update against live Foundry with test-{agent}-{timestamp} naming, idempotency verification, and full teardown — auto-skip when FOUNDRY_PROJECT_CONNECTION_STRING unset — must also verify edge cases: failed/cancelled run detection, KV-unreachable error surfacing — in tests/<agent-1>/test_agent_create.py
-- [ ] T045 [US6] Create integration tests for full run lifecycle (create thread, post message, run agent, assert response, cleanup) with @pytest.mark.integration in tests/<agent-1>/test_agent_run.py
+- [X] T038 [P] [US6] Create root conftest with shared fixtures (mock_config, mock_client, mock_agents_client) and pytest markers registration (integration, agent_1, agent_2) in tests/conftest.py
+- [X] T039 [P] [US6] Create unit tests for FoundryBaseConfig (env var loading, defaults, validation) with mocked env vars in tests/_base/test_config.py
+- [X] T040 [P] [US6] Create unit tests for AIProjectClient singleton init (credential handling, connection string) with mocked SDK in tests/_base/test_client.py
+- [X] T041 [P] [US6] Create unit tests for create_or_update_agent (create path, update path, missing instructions, empty instructions, conditional tool appending, edge cases: invalid connection string error, empty registry warning, concurrent deploy idempotency) with mocked agents_client in tests/_base/test_agent_factory.py
+- [X] T042 [P] [US6] Create agent-1 conftest with agent-specific fixtures and @pytest.mark.agent_1 marker in tests/<agent-1>/conftest.py
+- [X] T043 [P] [US6] Create unit tests for agent-1 tools (function input/output, edge cases) in tests/<agent-1>/test_tools.py
+- [X] T044 [US6] Create integration tests for agent create/update against live Foundry with test-{agent}-{timestamp} naming, idempotency verification, and full teardown — auto-skip when FOUNDRY_PROJECT_CONNECTION_STRING unset — must also verify edge cases: failed/cancelled run detection, KV-unreachable error surfacing — in tests/<agent-1>/test_agent_create.py
+- [X] T045 [US6] Create integration tests for full run lifecycle (create thread, post message, run agent, assert response, cleanup) with @pytest.mark.integration in tests/<agent-1>/test_agent_run.py
 
 ### Agent-2 Tests
 
-- [ ] T045a [P] [US6] Create agent-2 conftest with agent-specific fixtures and @pytest.mark.agent_2 marker in tests/<agent-2>/conftest.py
-- [ ] T045b [P] [US6] Create unit tests for agent-2 tools (function input/output, edge cases) in tests/<agent-2>/test_tools.py
+- [X] T045a [P] [US6] Create agent-2 conftest with agent-specific fixtures and @pytest.mark.agent_2 marker in tests/<agent-2>/conftest.py
+- [X] T045b [P] [US6] Create unit tests for agent-2 tools (function input/output, edge cases) in tests/<agent-2>/test_tools.py
 
 **Checkpoint**: At this point, full test coverage is in place. Unit tests run without credentials, integration tests verify live behaviour with cleanup (SC-003, SC-009).
 
@@ -178,9 +178,9 @@
 
 **Purpose**: Documentation, final validation, and cross-story quality improvements
 
-- [ ] T046 [P] Create README.md with shields.io badges (license, Python version, Azure, Terraform, Bicep, GitHub Actions, repo stats), project overview, architecture diagram, decision guide (Terraform vs Bicep, existing vs new Foundry), setup instructions, and links to notebooks and spec at project root
-- [ ] T047 [P] Verify and update .env.example to reflect all environment variables added across all user stories at project root
-- [ ] T048 Run quickstart.md validation end-to-end: clone → configure → deploy → test → add agent → verify all steps succeed. Also verify SC-001 (first agent deployed and responding within 15 minutes of clone).
+- [X] T046 [P] Create README.md with shields.io badges (license, Python version, Azure, Terraform, Bicep, GitHub Actions, repo stats), project overview, architecture diagram, decision guide (Terraform vs Bicep, existing vs new Foundry), setup instructions, and links to notebooks and spec at project root
+- [X] T047 [P] Verify and update .env.example to reflect all environment variables added across all user stories at project root
+- [X] T048 Run quickstart.md validation end-to-end: clone → configure → deploy → test → add agent → verify all steps succeed. Also verify SC-001 (first agent deployed and responding within 15 minutes of clone).
 
 ---
 

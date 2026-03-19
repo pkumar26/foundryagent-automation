@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "foundryagent-automation"
+version = "0.1.0"
+description = "Multi-agent platform for Azure AI Foundry Agent Service"
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: marks tests as integration tests (require Azure credentials)",
+    "code_helper: marks tests for the code-helper agent",
+    "doc_assistant: marks tests for the doc-assistant agent",
+]
+asyncio_mode = "auto"
