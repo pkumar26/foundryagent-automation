@@ -1,0 +1,63 @@
+name: Create Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      agent_name:
+        description: "Agent name in kebab-case (e.g., my-agent)"
+        required: true
+        type: string
+      model:
+        description: "Model name for the agent"
+        required: false
+        default: "gpt-4o"
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  scaffold-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run scaffolding script
+        run: python scripts/create_agent.py --name "${{ inputs.agent_name }}" --model "${{ inputs.model }}"
+
+      - name: Create branch and commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "scaffold/${{ inputs.agent_name }}"
+          git add .
+          git commit -m "feat: scaffold agent ${{ inputs.agent_name }}"
+          git push origin "scaffold/${{ inputs.agent_name }}"
+
+      - name: Create pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --title "feat: add agent ${{ inputs.agent_name }}" \
+            --body "## New Agent: ${{ inputs.agent_name }}
+
+          Scaffolded via GitHub Actions workflow.
+
+          ### Generated Files
+          - \`agents/${{ inputs.agent_name }}/\` — agent code
+          - \`tests/${{ inputs.agent_name }}/\` — test stubs
+          - \`agents/registry.py\` — updated with new entry
+
+          ### Next Steps
+          1. Review and customise \`instructions.md\`
+          2. Add custom tools
+          3. Merge when ready" \
+            --base main

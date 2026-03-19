@@ -8,8 +8,8 @@
 [![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
 ![GitHub stars](https://img.shields.io/github/stars/pkumar26/foundryagent-automation?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/pkumar26/foundryagent-automation?style=social)
-![GitHub issues](https://img.shields.io/github/issues/pkumar26/foundryagent-automation)](https://github.com/pkumar26/foundryagent-automation/issues)
-![GitHub last commit](https://img.shields.io/github/last-commit/pkumar26/foundryagent-automation)](https://github.com/pkumar26/foundryagent-automation/commits)
+[![GitHub issues](https://img.shields.io/github/issues/pkumar26/foundryagent-automation)](https://github.com/pkumar26/foundryagent-automation/issues)
+[![GitHub last commit](https://img.shields.io/github/last-commit/pkumar26/foundryagent-automation)](https://github.com/pkumar26/foundryagent-automation/commits)
 ![Repo size](https://img.shields.io/github/repo-size/pkumar26/foundryagent-automation)
 
 A production-grade, multi-agent platform built on the **Azure AI Foundry Agent Service SDK**. Each agent is self-contained, independently deployable, and managed through a central registry. Deploy one agent or many, across dev/qa/prod environments, using automated CI/CD with GitHub Actions and your choice of Terraform or Bicep for infrastructure.
@@ -29,7 +29,10 @@ infra/
 
 tests/                  # Unit + integration tests mirroring agents/ structure
 notebooks/              # Interactive onboarding guides
-scripts/                # CLI deploy script
+scripts/                # CLI deploy + agent scaffolding
+├── deploy_agent.py     # CLI deploy script
+└── create_agent.py     # CLI agent scaffolding
+docs/                   # Guides and reference documentation
 .github/workflows/      # CI/CD pipelines (test + deploy)
 ```
 
@@ -92,6 +95,25 @@ pytest tests/ -m code_helper -v
 
 ## Adding a New Agent
 
+### Automated (Recommended)
+
+```bash
+# Scaffold a new agent with one command
+python scripts/create_agent.py --name my-agent
+
+# Or specify a model
+python scripts/create_agent.py --name my-agent --model gpt-4o-mini
+
+# Or use a YAML input file
+python scripts/create_agent.py --from-file agent-config.yaml
+```
+
+This generates the full agent directory (`agents/my_agent/`), test stubs (`tests/my_agent/`), and registry entry — ready to deploy immediately.
+
+See the [Scaffolding Guide](docs/scaffolding-guide.md) for YAML format, customisation, FAQ, and troubleshooting.
+
+### Manual
+
 1. Create folder: `agents/<new_agent>/` with `config.py`, `instructions.md`, `tools/`, `integrations/`
 2. Add one entry to `agents/registry.py`
 3. Deploy: `python scripts/deploy_agent.py --agent <new-agent>`
@@ -104,6 +126,7 @@ Interactive onboarding for developers new to Azure AI Foundry:
 
 - **[01_setup_and_connect.ipynb](notebooks/01_setup_and_connect.ipynb)** — Connect to Foundry (existing or new)
 - **[02_build_and_run_agent.ipynb](notebooks/02_build_and_run_agent.ipynb)** — Create, run, and interact with an agent
+- **[03_scaffold_agent.ipynb](notebooks/03_scaffold_agent.ipynb)** — Scaffold a new agent end-to-end
 
 ## CI/CD
 
@@ -111,6 +134,7 @@ Interactive onboarding for developers new to Azure AI Foundry:
 |----------|---------|---------|
 | `test.yml` | PR + push to main | Lint (Black, isort, flake8) + unit tests |
 | `deploy.yml` | Push to main (dev auto) / manual dispatch (qa/prod) | Infra provisioning + agent deployment + integration tests |
+| `create-agent.yml` | Manual dispatch | Scaffold new agent + open PR |
 
 Authentication uses OIDC (Workload Identity Federation) — no client secrets.
 

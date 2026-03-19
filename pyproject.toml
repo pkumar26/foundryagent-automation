@@ -24,5 +24,6 @@ markers = [
     "integration: marks tests as integration tests (require Azure credentials)",
     "code_helper: marks tests for the code-helper agent",
     "doc_assistant: marks tests for the doc-assistant agent",
+    "scaffolding: marks tests for the agent scaffolding script",
 ]
 asyncio_mode = "auto"
