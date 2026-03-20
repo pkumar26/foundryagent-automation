@@ -28,13 +28,26 @@ GITHUB_SPEC = {
         "/users/{username}/repos": {
             "get": {
                 "operationId": "listUserRepos",
-                "summary": "List repositories for a user",
+                "summary": "List repositories for a user (not an organization)",
                 "parameters": [
                     {"name": "username", "in": "path", "required": True, "schema": {"type": "string"}},
                     {"name": "sort", "in": "query", "schema": {"type": "string", "enum": ["created", "updated", "pushed", "full_name"]}},
                     {"name": "per_page", "in": "query", "schema": {"type": "integer", "default": 30}},
                 ],
                 "responses": {"200": {"description": "List of repositories"}},
+            }
+        },
+        "/orgs/{org}/repos": {
+            "get": {
+                "operationId": "listOrgRepos",
+                "summary": "List repositories for an organization. Use this when the target is a GitHub organization, not an individual user.",
+                "parameters": [
+                    {"name": "org", "in": "path", "required": True, "schema": {"type": "string"}, "description": "The organization name (e.g. 'Western-Financial-Group')"},
+                    {"name": "type", "in": "query", "schema": {"type": "string", "enum": ["all", "public", "private", "forks", "sources", "member"]}},
+                    {"name": "sort", "in": "query", "schema": {"type": "string", "enum": ["created", "updated", "pushed", "full_name"]}},
+                    {"name": "per_page", "in": "query", "schema": {"type": "integer", "default": 30}},
+                ],
+                "responses": {"200": {"description": "List of organization repositories"}},
             }
         },
         "/repos/{owner}/{repo}": {
