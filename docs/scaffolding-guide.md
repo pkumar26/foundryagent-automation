@@ -10,8 +10,8 @@
 
 ## Prerequisites
 
-- **Python 3.11+** with a virtual environment activated
-- The repository cloned and dependencies installed (`pip install -r requirements.txt`)
+- **Python 3.11+** with [uv](https://docs.astral.sh/uv/) installed
+- The repository cloned and dependencies installed (`uv sync`)
 - No additional packages required — the script uses only the Python standard library
 
 ## Quick Start
@@ -111,7 +111,7 @@ agents/{module_name}/
 ├── instructions.md          # System instructions (markdown)
 ├── tools/
 │   ├── __init__.py          # Exports TOOLS list
-│   └── sample_tool.py       # Sample greeting/echo tool
+│   └── sample_tool.py       # Sample greeting tool
 └── integrations/
     ├── __init__.py          # Package init
     ├── github_mcp.py        # GitHub MCP stub (returns None when disabled)
@@ -155,6 +155,8 @@ TOOLS = [create_function_tool([search_docs])]
 
 Update `agents/{module_name}/tools/__init__.py` to import your new tools.
 
+See the [Custom Tools Guide](custom-tools-guide.md) for full details on function requirements, testing, error handling, and a complete walkthrough.
+
 ### 3. Update Config
 
 Edit `agents/{module_name}/config.py` to add agent-specific settings:
@@ -178,7 +180,7 @@ knowledge_source_enabled: bool = True
 github_mcp_enabled: bool = True
 ```
 
-Then implement the integration functions in `agents/{module_name}/integrations/`.
+Then implement the integration functions in `agents/{module_name}/integrations/`. See the [MCP & External Tools Guide](mcp-integration-guide.md) for step-by-step implementation details, auth setup, and examples.
 
 ### 5. Write Tests
 

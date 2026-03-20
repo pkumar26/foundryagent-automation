@@ -59,22 +59,25 @@ The script will:
 Open a Python shell or use the notebook `notebooks/02_build_and_run_agent.ipynb`:
 
 ```python
-from azure.ai.projects import AIProjectClient
+from azure.ai.agents import AgentsClient
 from azure.identity import DefaultAzureCredential
 
-client = AIProjectClient.from_connection_string(
-    conn_str="<your-connection-string>",
+client = AgentsClient(
+    endpoint="<your-connection-string>",
     credential=DefaultAzureCredential()
 )
 
 # Create thread, send message, run agent
-thread = client.agents.threads.create()
-client.agents.messages.create(thread_id=thread.id, role="user", content="Hello!")
-run = client.agents.runs.create_and_process(thread_id=thread.id, agent_id="<agent-id>")
+thread = client.threads.create()
+client.messages.create(thread_id=thread.id, role="user", content="Hello!")
+run = client.runs.create_and_process(thread_id=thread.id, agent_id="<agent-id>")
 
 # Get response
-messages = client.agents.messages.list(thread_id=thread.id)
-print(messages.data[0].content[0].text.value)
+from azure.ai.agents.models import MessageRole
+last_msg = client.messages.get_last_message_text_by_role(
+    thread_id=thread.id, role=MessageRole.AGENT
+)
+print(last_msg.text.value)
 ```
 
 ## 5. Run Tests
@@ -97,6 +100,16 @@ python scripts/deploy_agent.py --all
 ```
 
 ## 7. Add a New Agent
+
+### Automated (Recommended)
+
+```bash
+python scripts/create_agent.py --name my-agent
+```
+
+See the [Scaffolding Guide](../../docs/scaffolding-guide.md) for YAML input, customisation, and FAQ.
+
+### Manual
 
 1. Create folder: `agents/<new-agent>/`
 2. Add files: `__init__.py`, `config.py`, `instructions.md`, `tools/`, `integrations/`

@@ -6,7 +6,7 @@ Auto-generated from all feature plans. Last updated: 2026-03-19
 - Python 3.11 + Python standard library only (argparse, pathlib, textwrap, re); pydantic-settings (existing, for generated config classes) (004-agent-scaffolding)
 - Filesystem — generates Python source files and Markdown (004-agent-scaffolding)
 
-- Python 3.11+ + azure-ai-projects (AIProjectClient, AgentsClient, FunctionTool, ThreadMessage, Run, RunStatus), azure-identity (DefaultAzureCredential), pydantic-settings (003-foundry-agent-platform)
+- Python 3.11+ + azure-ai-agents (AgentsClient, FunctionTool, ThreadMessage, Run, RunStatus, MessageRole), azure-identity (DefaultAzureCredential), pydantic-settings (003-foundry-agent-platform)
 
 ## Project Structure
 
@@ -27,7 +27,7 @@ Python 3.11+: Follow standard conventions
 - 004-agent-scaffolding: Added Python 3.11 + Python standard library only (argparse, pathlib, textwrap, re); pydantic-settings (existing, for generated config classes)
 - 004-agent-scaffolding: Added Python 3.11 + Python standard library only (argparse, pathlib, textwrap, re); pydantic-settings (existing, for generated config classes)
 
-- 003-foundry-agent-platform: Added Python 3.11+ + azure-ai-projects (AIProjectClient, AgentsClient, FunctionTool, ThreadMessage, Run, RunStatus), azure-identity (DefaultAzureCredential), pydantic-settings
+- 003-foundry-agent-platform: Added Python 3.11+ + azure-ai-agents (AgentsClient, FunctionTool, ThreadMessage, Run, RunStatus, MessageRole), azure-identity (DefaultAzureCredential), pydantic-settings
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

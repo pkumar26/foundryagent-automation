@@ -1,6 +1,8 @@
 """Thread-and-run lifecycle helper for agent interactions."""
 
-from azure.ai.agents.models import MessageRole, RunStatus
+import importlib
+
+from azure.ai.agents.models import MessageRole
 
 from agents._base.client import get_client
 
@@ -13,6 +15,7 @@ def run_agent(
     connection_string: str,
     agent_id: str,
     prompt: str,
+    agent_name: str | None = None,
     timeout: int = 120,
 ) -> str:
     """Execute a full thread-and-run lifecycle.
@@ -23,6 +26,7 @@ def run_agent(
         connection_string: Foundry project endpoint URL.
         agent_id: The deployed agent's ID.
         prompt: The user message to send.
+        agent_name: Agent name (e.g. "code-helper") to load tools for auto-execution.
         timeout: Maximum seconds to wait for run completion.
 
     Returns:
@@ -33,6 +37,10 @@ def run_agent(
         TimeoutError: If the run does not complete within the timeout.
     """
     client = get_client(connection_string)
+
+    # Register tool functions for auto-execution if agent_name is provided
+    if agent_name:
+        _register_agent_tools(client, agent_name)
 
     # Create thread
     thread = client.threads.create()
@@ -45,19 +53,20 @@ def run_agent(
             content=prompt,
         )
 
-        # Create and process run (SDK handles polling)
+        # Create and process run (SDK handles polling + tool execution)
         run = client.runs.create_and_process(
             thread_id=thread.id,
             agent_id=agent_id,
+            polling_interval=1,
         )
 
         # Check terminal status
-        if run.status == RunStatus.FAILED:
+        if run.status == "failed":
             error_msg = getattr(run, "last_error", None)
             raise AgentRunError(f"Agent run failed: {error_msg or 'Unknown error'}")
-        if run.status == RunStatus.CANCELLED:
+        if run.status == "cancelled":
             raise AgentRunError("Agent run was cancelled")
-        if run.status != RunStatus.COMPLETED:
+        if run.status != "completed":
             raise AgentRunError(f"Agent run ended with unexpected status: {run.status}")
 
         # Retrieve last assistant message
@@ -73,3 +82,15 @@ def run_agent(
             client.threads.delete(thread.id)
         except Exception:
             pass
+
+
+def _register_agent_tools(client, agent_name: str) -> None:
+    """Load and register an agent's tool functions for auto-execution."""
+    module_name = agent_name.replace("-", "_")
+    try:
+        tools_module = importlib.import_module(f"agents.{module_name}.tools")
+    except ModuleNotFoundError:
+        return
+    if hasattr(tools_module, "TOOLS"):
+        for tool in tools_module.TOOLS:
+            client.enable_auto_function_calls(tool)

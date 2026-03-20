@@ -14,7 +14,6 @@ class DocAssistantConfig(FoundryBaseConfig):
     agent_instructions_path: str = "agents/doc_assistant/instructions.md"
     knowledge_source_enabled: bool = False
     github_mcp_enabled: bool = False
-    azure_ai_search_endpoint: str = ""
+    azure_ai_search_connection_id: str = ""
     azure_ai_search_index_name: str = ""
-    github_mcp_endpoint: str = ""
-    github_mcp_token_secret_name: str = ""
+    github_mcp_connection_id: str = ""

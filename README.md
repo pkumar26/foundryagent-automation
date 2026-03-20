@@ -2,6 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![uv](https://img.shields.io/badge/uv-package%20manager-DE5FE9?logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
 [![Azure AI Foundry](https://img.shields.io/badge/Azure%20AI-Foundry-0078D4?logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/en-us/products/ai-services)
 [![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5-7B42BC?logo=terraform&logoColor=white)](https://www.terraform.io/)
 [![Bicep](https://img.shields.io/badge/Bicep-IaC-0078D4?logo=microsoftazure&logoColor=white)](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/)
@@ -49,6 +50,7 @@ docs/                   # Guides and reference documentation
 ### Prerequisites
 
 - Python 3.11+
+- [uv](https://docs.astral.sh/uv/) (install: `curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - Azure CLI authenticated (`az login`)
 - An Azure AI Foundry project connection string
 
@@ -58,9 +60,7 @@ docs/                   # Guides and reference documentation
 git clone <repo-url>
 cd foundryagent-automation
 
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+uv sync
 
 cp .env.example .env
 # Edit .env with your FOUNDRY_PROJECT_CONNECTION_STRING
@@ -69,28 +69,30 @@ cp .env.example .env
 ### Deploy Your First Agent
 
 ```bash
-python scripts/deploy_agent.py --agent code-helper
+uv run python scripts/deploy_agent.py --agent code-helper
 ```
 
 ### Deploy All Agents
 
 ```bash
-python scripts/deploy_agent.py --all
+uv run python scripts/deploy_agent.py --all
 ```
 
 ### Run Tests
 
 ```bash
-pip install -r requirements-dev.txt
+uv sync --group dev
 
 # Unit tests (no Azure credentials needed)
-pytest tests/ -m "not integration" -v
+uv run pytest tests/ -m "not integration" -v
 
 # Integration tests (requires FOUNDRY_PROJECT_CONNECTION_STRING)
-pytest tests/ -m integration -v
+# Export your connection string first — .env is not auto-loaded by pytest:
+export FOUNDRY_PROJECT_CONNECTION_STRING=$(grep FOUNDRY_PROJECT_CONNECTION_STRING .env | cut -d= -f2-)
+uv run pytest tests/ -m integration -v
 
 # Tests for a specific agent
-pytest tests/ -m code_helper -v
+uv run pytest tests/ -m code_helper -v
 ```
 
 ## Adding a New Agent
@@ -99,13 +101,13 @@ pytest tests/ -m code_helper -v
 
 ```bash
 # Scaffold a new agent with one command
-python scripts/create_agent.py --name my-agent
+uv run python scripts/create_agent.py --name my-agent
 
 # Or specify a model
-python scripts/create_agent.py --name my-agent --model gpt-4o-mini
+uv run python scripts/create_agent.py --name my-agent --model gpt-4o-mini
 
 # Or use a YAML input file
-python scripts/create_agent.py --from-file agent-config.yaml
+uv run python scripts/create_agent.py --from-file agent-config.yaml
 ```
 
 This generates the full agent directory (`agents/my_agent/`), test stubs (`tests/my_agent/`), and registry entry — ready to deploy immediately.
@@ -116,7 +118,7 @@ See the [Scaffolding Guide](docs/scaffolding-guide.md) for YAML format, customis
 
 1. Create folder: `agents/<new_agent>/` with `config.py`, `instructions.md`, `tools/`, `integrations/`
 2. Add one entry to `agents/registry.py`
-3. Deploy: `python scripts/deploy_agent.py --agent <new-agent>`
+3. Deploy: `uv run python scripts/deploy_agent.py --agent <new-agent>`
 
 Zero changes to existing agents or shared code required.
 
@@ -127,6 +129,12 @@ Interactive onboarding for developers new to Azure AI Foundry:
 - **[01_setup_and_connect.ipynb](notebooks/01_setup_and_connect.ipynb)** — Connect to Foundry (existing or new)
 - **[02_build_and_run_agent.ipynb](notebooks/02_build_and_run_agent.ipynb)** — Create, run, and interact with an agent
 - **[03_scaffold_agent.ipynb](notebooks/03_scaffold_agent.ipynb)** — Scaffold a new agent end-to-end
+
+## Guides
+
+- **[Scaffolding Guide](docs/scaffolding-guide.md)** — YAML format, customisation, and FAQ for agent scaffolding
+- **[Custom Tools Guide](docs/custom-tools-guide.md)** — How to write, test, and deploy custom Python tool functions
+- **[MCP & External Tools Guide](docs/mcp-integration-guide.md)** — Connect agents to GitHub, Azure AI Search, Bing, and any OpenAPI service
 
 ## CI/CD
 

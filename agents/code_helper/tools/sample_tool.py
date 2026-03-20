@@ -1,4 +1,4 @@
-"""Sample tool for the code-helper agent — a greeting/echo function."""
+"""Sample greeting tool for the code-helper agent."""
 
 from agents._base.tools import create_function_tool
 

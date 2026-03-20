@@ -14,5 +14,7 @@ def get_knowledge_tool(config: FoundryBaseConfig):
     """
     if not getattr(config, "knowledge_source_enabled", False):
         return None
-    # Future: return Azure AI Search tool definition
-    return None
+    raise NotImplementedError(
+        "Knowledge source integration is not yet implemented. "
+        "Set KNOWLEDGE_SOURCE_ENABLED=false to disable."
+    )

@@ -97,6 +97,7 @@ jobs:
 
       - name: Provision shared infra (Bicep)
         if: env.INFRA_TOOL == 'bicep'
+        id: deploy-bicep
         uses: azure/arm-deploy@v2
         with:
           scope: subscription

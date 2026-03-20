@@ -1,3 +1,4 @@
+# Note: snake_case to match Terraform conventions. Deploy workflow maps this to FOUNDRY_PROJECT_CONNECTION_STRING.
 output "project_connection_string" {
   description = "Foundry project connection string"
   value       = var.use_existing_foundry ? var.existing_foundry_connection_string : azurerm_cognitive_account.foundry[0].endpoint

@@ -156,10 +156,9 @@ def _template_config(
             agent_instructions_path: str = "{instructions_path}"
             knowledge_source_enabled: bool = False
             github_mcp_enabled: bool = False
-            azure_ai_search_endpoint: str = ""
+            azure_ai_search_connection_id: str = ""
             azure_ai_search_index_name: str = ""
-            github_mcp_endpoint: str = ""
-            github_mcp_token_secret_name: str = ""
+            github_mcp_connection_id: str = ""
     ''')
 
 
@@ -189,7 +188,7 @@ def _template_instructions(display_name: str) -> str:
 def _template_sample_tool(display_name: str) -> str:
     """Return sample_tool.py content for the scaffolded agent."""
     return textwrap.dedent(f'''\
-        """Sample tool for the {display_name.lower()} agent — a greeting/echo function."""
+        """Sample tool for the {display_name.lower()} agent — a greeting function."""
 
         from agents._base.tools import create_function_tool
 
@@ -226,24 +225,16 @@ def _template_github_mcp(module_name: str) -> str:
     """Return integrations/github_mcp.py content for the scaffolded agent."""
     agent_label = module_name.replace("_", "-")
     return textwrap.dedent(f'''\
-        """GitHub MCP integration stub for the {agent_label} agent."""
+        """GitHub MCP integration for the {agent_label} agent.
 
-        from agents._base.config import FoundryBaseConfig
+        Re-exports the shared GitHub OpenAPI tool from the code-helper agent.
+        To customise, replace the import with your own implementation.
+        See docs/mcp-integration-guide.md for setup instructions.
+        """
 
+        from agents.code_helper.integrations.github_mcp import get_github_mcp_tool  # noqa: F401
 
-        def get_github_mcp_tool(config: FoundryBaseConfig):
-            """Return a GitHub MCP tool definition, or None if disabled.
-
-            Args:
-                config: Agent configuration with github_mcp_enabled flag.
-
-            Returns:
-                Tool definition when enabled (future implementation), None when disabled.
-            """
-            if not getattr(config, "github_mcp_enabled", False):
-                return None
-            # Future: return GitHub MCP tool definition
-            return None
+        __all__ = ["get_github_mcp_tool"]
     ''')
 
 
@@ -267,8 +258,10 @@ def _template_knowledge(module_name: str) -> str:
             """
             if not getattr(config, "knowledge_source_enabled", False):
                 return None
-            # Future: return Azure AI Search tool definition
-            return None
+            raise NotImplementedError(
+                "Knowledge source integration is not yet implemented. "
+                "Set KNOWLEDGE_SOURCE_ENABLED=false to disable."
+            )
     ''')
 
 
@@ -474,8 +467,41 @@ def _template_test_agent_run(module_name: str, agent_name: str) -> str:
 
             def test_full_run_lifecycle(self, agents_client, test_agent):
                 """Should create thread, post message, run agent, and get response."""
-                # This is a stub — implement when running integration tests
-                pass
+                from azure.ai.agents.models import MessageRole, RunStatus
+
+                # Create thread
+                thread = agents_client.threads.create()
+                assert thread.id is not None
+
+                try:
+                    # Post message
+                    agents_client.messages.create(
+                        thread_id=thread.id,
+                        role="user",
+                        content="Hello!",
+                    )
+
+                    # Run agent
+                    run = agents_client.runs.create_and_process(
+                        thread_id=thread.id,
+                        agent_id=test_agent.id,
+                    )
+
+                    assert run.status == RunStatus.COMPLETED
+
+                    # Get response
+                    last_msg = agents_client.messages.get_last_message_text_by_role(
+                        thread_id=thread.id,
+                        role=MessageRole.AGENT,
+                    )
+
+                    assert last_msg is not None
+                    assert len(last_msg.text.value) > 0
+                finally:
+                    try:
+                        agents_client.threads.delete(thread.id)
+                    except Exception:
+                        pass
     ''')
 
 

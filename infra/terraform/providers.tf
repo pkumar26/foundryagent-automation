@@ -8,6 +8,8 @@ terraform {
     }
   }
 
+  # TODO: Update the backend values below to match your Azure Storage Account
+  # used for Terraform state. Replace "tfstateXXXXX" with your actual account name.
   backend "azurerm" {
     resource_group_name  = "tfstate-rg"
     storage_account_name = "tfstateXXXXX"
