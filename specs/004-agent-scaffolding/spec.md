@@ -25,7 +25,7 @@ A developer wants to add a new agent to the platform. They run `python scripts/c
 
 **Acceptance Scenarios**:
 
-1. **Given** a developer runs `python scripts/create_agent.py --name my-agent`, **When** the script completes, **Then** the directory `agents/my_agent/` exists with `__init__.py`, `config.py`, `instructions.md`, `tools/__init__.py`, `tools/sample_tool.py`, `integrations/__init__.py`, `integrations/github_mcp.py`, `integrations/knowledge.py`.
+1. **Given** a developer runs `python scripts/create_agent.py --name my-agent`, **When** the script completes, **Then** the directory `agents/my_agent/` exists with `__init__.py`, `config.py`, `instructions.md`, `tools/__init__.py`, `tools/sample_tool.py`, `integrations/__init__.py`, `integrations/github_openapi.py`, `integrations/knowledge.py`.
 2. **Given** the scaffolding script has completed, **When** the developer inspects `agents/registry.py`, **Then** it contains a new `AgentRegistryEntry` for `my-agent` with the correct config class and factory.
 3. **Given** the scaffolding script has completed, **When** the developer inspects `tests/my_agent/`, **Then** it contains `__init__.py`, `conftest.py`, `test_tools.py`, `test_agent_create.py`, and `test_agent_run.py`.
 4. **Given** an agent with the same name already exists, **When** the developer runs the script again, **Then** the script fails with a clear error message and does not overwrite existing files.
@@ -74,7 +74,7 @@ A developer new to the project wants to understand both the manual and automated
 - FR-3: Generated config class extends `FoundryBaseConfig` with correct defaults.
 - FR-4: Generated instructions file includes a placeholder template.
 - FR-5: Generated tools module includes a sample tool following existing patterns.
-- FR-6: Generated integration stubs (knowledge, github_mcp) follow existing patterns.
+- FR-6: Generated integration stubs (knowledge, github_openapi) follow existing patterns.
 - FR-7: Generated test stubs follow existing test patterns.
 - FR-8: Registry update appends new entry without corrupting existing entries.
 - FR-9: Idempotency guard — refuse to overwrite existing agent directories.

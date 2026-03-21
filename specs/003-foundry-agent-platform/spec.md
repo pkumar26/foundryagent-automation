@@ -3,7 +3,7 @@
 **Feature Branch**: `003-foundry-agent-platform`  
 **Created**: 2026-03-18  
 **Status**: Approved  
-**Input**: User description: "Build a production-grade, multi-agent platform using the Azure AI Foundry Agent Service SDK (Python, azure-ai-projects library), hosted serverlessly via Azure AI Foundry. The platform must support multiple agents, each fully self-contained, deployable individually or together across multiple environments (dev, qa, prod) via automated CI/CD using GitHub Actions and Terraform or Bicep. The project must include automated testing and Jupyter notebook onboarding guides. Knowledge source integration (Azure AI Search) and GitHub MCP integration must be architecturally reserved but not yet implemented. Foundry infrastructure provisioning must be optional — users must be able to connect to an existing Foundry project or provision a new one using the new Microsoft Foundry resource model."
+**Input**: User description: "Build a production-grade, multi-agent platform using the Azure AI Foundry Agent Service SDK (Python, azure-ai-projects library), hosted serverlessly via Azure AI Foundry. The platform must support multiple agents, each fully self-contained, deployable individually or together across multiple environments (dev, qa, prod) via automated CI/CD using GitHub Actions and Terraform or Bicep. The project must include automated testing and Jupyter notebook onboarding guides. Knowledge source integration (Azure AI Search) and GitHub OpenAPI integration must be architecturally reserved but not yet implemented. Foundry infrastructure provisioning must be optional — users must be able to connect to an existing Foundry project or provision a new one using the new Microsoft Foundry resource model."
 
 ## Clarifications
 
@@ -142,8 +142,8 @@ A developer wants to run unit tests locally without Azure credentials, and integ
 #### Integration Stubs
 
 - **FR-008**: Each agent MUST include a knowledge source stub (`integrations/knowledge.py`) that returns `None` when `KNOWLEDGE_SOURCE_ENABLED` is false, with reserved environment variables for search endpoint and index name.
-- **FR-009**: Each agent MUST include a GitHub MCP stub (`integrations/github_mcp.py`) that returns `None` when `GITHUB_MCP_ENABLED` is false, with reserved environment variables `GITHUB_MCP_ENDPOINT` (MCP server endpoint) and `GITHUB_MCP_TOKEN_SECRET_NAME` (Key Vault secret name for the GitHub PAT).
-- **FR-010**: The agent factory MUST conditionally append knowledge and GitHub MCP tools to the agent's tool list based on their respective feature flags.
+- **FR-009**: Each agent MUST include a GitHub OpenAPI stub (`integrations/github_openapi.py`) that returns `None` when `GITHUB_OPENAPI_ENABLED` is false, with reserved environment variables `GITHUB_OPENAPI_ENDPOINT` (OpenAPI server endpoint) and `GITHUB_OPENAPI_TOKEN_SECRET_NAME` (Key Vault secret name for the GitHub PAT).
+- **FR-010**: The agent factory MUST conditionally append knowledge and GitHub OpenAPI tools to the agent's tool list based on their respective feature flags.
 
 #### Infrastructure
 

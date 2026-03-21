@@ -359,7 +359,7 @@ class MyAgentConfig(FoundryBaseConfig):
     agent_model: str = "gpt-4o"
     agent_instructions_path: str = "agents/my-agent/instructions.md"
     knowledge_source_enabled: bool = False
-    github_mcp_enabled: bool = False
+    github_openapi_enabled: bool = False
     # Agent-specific
     azure_ai_search_endpoint: str = ""
     azure_ai_search_index_name: str = ""

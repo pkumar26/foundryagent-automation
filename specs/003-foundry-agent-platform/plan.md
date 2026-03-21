@@ -5,7 +5,7 @@
 
 ## Summary
 
-Build a production-grade, multi-agent platform using the Azure AI Foundry Agent Service SDK (`azure-ai-projects`, Python 3.11+). Each agent is self-contained in its own folder with config, instructions, tools, and integration stubs, registered in a central registry, and deployable individually or together across dev/qa/prod via a CLI script and GitHub Actions. Infrastructure is provisioned declaratively via Terraform or Bicep (user's choice), with optional Foundry resource creation using the new CognitiveServices/AIServices model. Authentication uses `DefaultAzureCredential` everywhere and OIDC in CI/CD. Knowledge source (Azure AI Search) and GitHub MCP integration are architecturally reserved via stubs but deferred.
+Build a production-grade, multi-agent platform using the Azure AI Foundry Agent Service SDK (`azure-ai-projects`, Python 3.11+). Each agent is self-contained in its own folder with config, instructions, tools, and integration stubs, registered in a central registry, and deployable individually or together across dev/qa/prod via a CLI script and GitHub Actions. Infrastructure is provisioned declaratively via Terraform or Bicep (user's choice), with optional Foundry resource creation using the new CognitiveServices/AIServices model. Authentication uses `DefaultAzureCredential` everywhere and OIDC in CI/CD. Knowledge source (Azure AI Search) and GitHub OpenAPI integration are architecturally reserved via stubs but deferred.
 
 ## Technical Context
 
@@ -29,7 +29,7 @@ Build a production-grade, multi-agent platform using the Azure AI Foundry Agent 
 | I.2 | Code readable by unfamiliar dev | PASS | Self-contained agent folders, clear naming conventions, notebook onboarding |
 | I.3 | Public function/class/module docstrings | PASS | Will be enforced during implementation; code quality tooling in CI |
 | I.4 | No hardcoded secrets | PASS | DefaultAzureCredential everywhere (FR-006, FR-020); Key Vault for GitHub PAT (FR-009); no API keys |
-| I.5 | Feature flags for incomplete capabilities | PASS | KNOWLEDGE_SOURCE_ENABLED, GITHUB_MCP_ENABLED flags (FR-008, FR-009, FR-010) |
+| I.5 | Feature flags for incomplete capabilities | PASS | KNOWLEDGE_SOURCE_ENABLED, GITHUB_OPENAPI_ENABLED flags (FR-008, FR-009, FR-010) |
 | II.1 | Declarative, version-controlled infra | PASS | Terraform + Bicep in repo (FR-011–FR-016) |
 | II.2 | Environments structurally identical | PASS | Config-only differences via tfvars/bicepparam (FR-014) |
 | II.3 | Same codebase, all environments | PASS | No environment-specific code forks — env vars and config files only |
@@ -108,7 +108,7 @@ agents/
 │   │   └── sample_tool.py
 │   └── integrations/
 │       ├── knowledge.py        # Knowledge source stub
-│       └── github_mcp.py       # GitHub MCP stub
+│       └── github_openapi.py   # GitHub OpenAPI stub
 ├── <agent-name-2>/
 │   └── ...                     # Same structure
 └── registry.py                 # Agent registry
@@ -180,7 +180,7 @@ pyproject.toml
 
 | Principle | Post-Design Status | Notes |
 |---|---|---|
-| I.5 Feature flags for incomplete capabilities | PASS | IntegrationStub entity uses `KNOWLEDGE_SOURCE_ENABLED` / `GITHUB_MCP_ENABLED` flags |
+| I.5 Feature flags for incomplete capabilities | PASS | IntegrationStub entity uses `KNOWLEDGE_SOURCE_ENABLED` / `GITHUB_OPENAPI_ENABLED` flags |
 | II.5 Extensible without restructuring | PASS | Registry contract: new agent = one `AgentRegistryEntry` line; self-contained folder |
 | III.1 Every assertable behaviour tested | PASS | All contract error conditions (ValueError, KeyError, FileNotFoundError) are testable |
 | IV.4 Deployments idempotent | PASS | Agent factory contract explicitly guarantees idempotency via create-or-update |

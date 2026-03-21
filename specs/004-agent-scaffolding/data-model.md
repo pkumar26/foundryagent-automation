@@ -48,7 +48,7 @@ Each scaffolded agent produces the following files:
 | `agents/{mod}/tools/__init__.py` | Tools init template | `{mod}` |
 | `agents/{mod}/tools/sample_tool.py` | Sample tool template | `{agent_display_name}` |
 | `agents/{mod}/integrations/__init__.py` | Empty file | — |
-| `agents/{mod}/integrations/github_mcp.py` | MCP stub template | `{mod}` |
+| `agents/{mod}/integrations/github_openapi.py` | OpenAPI stub template | `{mod}` |
 | `agents/{mod}/integrations/knowledge.py` | Knowledge stub template | `{mod}` |
 | `tests/{mod}/__init__.py` | Empty file | — |
 | `tests/{mod}/conftest.py` | Test conftest template | `{config_class_name}`, `{mod}` |

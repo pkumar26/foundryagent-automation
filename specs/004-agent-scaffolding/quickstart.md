@@ -32,7 +32,7 @@ agents/my_agent/
 ├── instructions.md        ← Write agent instructions
 ├── integrations/
 │   ├── __init__.py
-│   ├── github_mcp.py
+│   ├── github_openapi.py
 │   └── knowledge.py
 └── tools/
     ├── __init__.py

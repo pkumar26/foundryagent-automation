@@ -31,7 +31,7 @@
 
 - [X] T001 Create full project directory structure with all __init__.py files per plan.md (agents/_base/, agents/_base/tools/, agents/<agent-1>/, agents/<agent-1>/tools/, agents/<agent-1>/integrations/, agents/<agent-2>/, agents/<agent-2>/tools/, agents/<agent-2>/integrations/, infra/terraform/, infra/terraform/envs/, infra/bicep/, infra/bicep/modules/, infra/bicep/parameters/, tests/_base/, tests/<agent-1>/, tests/<agent-2>/, notebooks/, scripts/, .github/workflows/)
 - [X] T002 [P] Initialize Python project with pyproject.toml (metadata, Black/isort config) and dependency files requirements.txt (azure-ai-projects, azure-identity, pydantic-settings) and requirements-dev.txt (pytest, pytest-asyncio, black, isort, flake8) at project root
-- [X] T003 [P] Create .env.example listing all environment variables (FOUNDRY_PROJECT_CONNECTION_STRING, ENVIRONMENT, AZURE_KEY_VAULT_NAME, AGENT_NAME, AGENT_MODEL, KNOWLEDGE_SOURCE_ENABLED, GITHUB_MCP_ENABLED, AZURE_AI_SEARCH_ENDPOINT, AZURE_AI_SEARCH_INDEX_NAME, GITHUB_MCP_ENDPOINT, GITHUB_MCP_TOKEN_SECRET_NAME) at project root
+- [X] T003 [P] Create .env.example listing all environment variables (FOUNDRY_PROJECT_CONNECTION_STRING, ENVIRONMENT, AZURE_KEY_VAULT_NAME, AGENT_NAME, AGENT_MODEL, KNOWLEDGE_SOURCE_ENABLED, GITHUB_OPENAPI_ENABLED, AZURE_AI_SEARCH_ENDPOINT, AZURE_AI_SEARCH_INDEX_NAME, GITHUB_OPENAPI_ENDPOINT, GITHUB_OPENAPI_TOKEN_SECRET_NAME) at project root
 - [X] T004 [P] Create .flake8 configuration file and .gitignore (Python, .env, __pycache__, .venv, *.tfstate, .terraform/, .idea/, .vscode/) at project root
 
 ---
@@ -64,7 +64,7 @@
 - [X] T011 [P] [US1] Write first agent system instructions as versioned markdown in agents/<agent-1>/instructions.md
 - [X] T012 [P] [US1] Implement sample function tool (e.g., greeting or echo) using FunctionTool pattern in agents/<agent-1>/tools/sample_tool.py
 - [X] T013 [P] [US1] Create knowledge source integration stub returning None when KNOWLEDGE_SOURCE_ENABLED is false with get_knowledge_tool(config) signature in agents/<agent-1>/integrations/knowledge.py
-- [X] T014 [P] [US1] Create GitHub MCP integration stub returning None when GITHUB_MCP_ENABLED is false with get_github_mcp_tool(config) signature in agents/<agent-1>/integrations/github_mcp.py
+- [X] T014 [P] [US1] Create GitHub OpenAPI integration stub returning None when GITHUB_OPENAPI_ENABLED is false with get_github_openapi_tool(config) signature in agents/<agent-1>/integrations/github_openapi.py
 - [X] T015 [US1] Register first agent as AgentRegistryEntry in REGISTRY within agents/registry.py
 - [X] T016 [US1] Implement deploy CLI script with argparse (--agent <name>, --all, mutually exclusive), registry resolution, per-agent error isolation, and summary output per deploy-script contract in scripts/deploy_agent.py
 - [X] T017 [US1] Implement run lifecycle helper with create_thread, send_message, create_and_process_run, retrieve_response, and failure/cancellation handling with configurable timeout (default 120s) in agents/_base/run.py
@@ -84,7 +84,7 @@
 - [X] T018 [P] [US2] Create second agent config subclass with distinct agent_name and model defaults in agents/<agent-2>/config.py
 - [X] T019 [P] [US2] Write second agent system instructions in agents/<agent-2>/instructions.md
 - [X] T020 [P] [US2] Implement sample function tool with a different capability than agent-1 in agents/<agent-2>/tools/sample_tool.py
-- [X] T021 [P] [US2] Create knowledge source and GitHub MCP integration stubs in agents/<agent-2>/integrations/knowledge.py and agents/<agent-2>/integrations/github_mcp.py
+- [X] T021 [P] [US2] Create knowledge source and GitHub OpenAPI integration stubs in agents/<agent-2>/integrations/knowledge.py and agents/<agent-2>/integrations/github_openapi.py
 - [X] T022 [US2] Register second agent as AgentRegistryEntry in REGISTRY within agents/registry.py (single line addition, zero changes to agent-1)
 
 **Checkpoint**: At this point, two agents are independently deployable. `deploy_agent.py --all` deploys both. Adding agent required exactly two locations: the agent folder and one registry line (SC-002).
@@ -236,7 +236,7 @@ T010: "Create first agent config in agents/<agent-1>/config.py"
 T011: "Write first agent instructions in agents/<agent-1>/instructions.md"
 T012: "Implement sample function tool in agents/<agent-1>/tools/sample_tool.py"
 T013: "Create knowledge stub in agents/<agent-1>/integrations/knowledge.py"
-T014: "Create GitHub MCP stub in agents/<agent-1>/integrations/github_mcp.py"
+T014: "Create GitHub OpenAPI stub in agents/<agent-1>/integrations/github_openapi.py"
 
 # Then sequentially:
 T015: "Register first agent in agents/registry.py" (needs T010 config class)

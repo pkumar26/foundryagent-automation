@@ -98,7 +98,7 @@ The guide should include contextual shields.io badges:
 2. How do I delete a scaffolded agent?
 3. How do I add more tools to my agent?
 4. How do I change the model after creation?
-5. How do I enable knowledge source or GitHub MCP integration?
+5. How do I enable knowledge source or GitHub OpenAPI integration?
 6. Can I scaffold multiple agents at once?
 
 ### Troubleshooting Entries (minimum)

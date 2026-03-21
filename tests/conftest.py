@@ -16,7 +16,7 @@ def mock_config():
     config.agent_model = "gpt-4o"
     config.agent_instructions_path = "agents/code_helper/instructions.md"
     config.knowledge_source_enabled = False
-    config.github_mcp_enabled = False
+    config.github_openapi_enabled = False
     return config
 
 
