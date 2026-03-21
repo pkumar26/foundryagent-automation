@@ -86,7 +86,7 @@ module rbacKvUser 'modules/rbac-kv-user.bicep' = if (ciPrincipalId != '') {
   scope: rg
   params: {
     principalId: ciPrincipalId
-    keyVaultId: keyVault.outputs.keyVaultId
+    keyVaultName: keyVault.outputs.keyVaultName
   }
 }
 
@@ -95,8 +95,11 @@ module rbacCognitiveUser 'modules/rbac-cognitive-user.bicep' = if (!useExistingF
   scope: rg
   params: {
     principalId: ciPrincipalId
-    foundryAccountId: foundryResource.outputs.accountId
+    foundryAccountName: '${prefix}-foundry-${environment}'
   }
+  dependsOn: [
+    foundryResource
+  ]
 }
 
 // Outputs

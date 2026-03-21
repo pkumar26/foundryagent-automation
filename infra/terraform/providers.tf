@@ -9,18 +9,17 @@ terraform {
   }
 
   # Backend configuration for Terraform remote state.
-  # Before running `terraform init`, update these values:
-  #   1. Create an Azure Storage Account for state (or use an existing one)
-  #   2. Create a blob container named "tfstate" in that account
-  #   3. Replace "tfstateXXXXX" below with your storage account name
-  #   4. Update resource_group_name to match the RG containing the storage account
-  # For local development, you can remove the backend block entirely to use local state.
-  backend "azurerm" {
-    resource_group_name  = "tfstate-rg"
-    storage_account_name = "tfstateXXXXX"
-    container_name       = "tfstate"
-    key                  = "foundryagent.tfstate"
-  }
+  # Values are supplied at `terraform init` time via -backend-config flags
+  # (see deploy.yml) or via a backend.hcl file for local development:
+  #
+  #   terraform init -backend-config=backend.hcl
+  #
+  # Required backend-config keys:
+  #   resource_group_name  — RG containing the state storage account
+  #   storage_account_name — Azure Storage Account name
+  #   container_name       — Blob container (default: tfstate)
+  #   key                  — State file name (e.g. foundryagent-dev.tfstate)
+  backend "azurerm" {}
 }
 
 provider "azurerm" {

@@ -1,12 +1,11 @@
 name: Deploy
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       environment:
         description: "Target environment"
+        required: true
         type: choice
         options:
           - dev
@@ -14,6 +13,7 @@ on:
           - prod
       infra_tool:
         description: "Infrastructure tool"
+        required: true
         type: choice
         options:
           - terraform
@@ -37,11 +37,11 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment || 'dev' }}
+    environment: ${{ inputs.environment }}
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      ENVIRONMENT: ${{ inputs.environment || 'dev' }}
-      INFRA_TOOL: ${{ inputs.infra_tool || 'terraform' }}
+      ENVIRONMENT: ${{ inputs.environment }}
+      INFRA_TOOL: ${{ inputs.infra_tool }}
       USE_EXISTING_FOUNDRY: ${{ inputs.use_existing_foundry || 'true' }}
       AGENT_TARGET: ${{ inputs.agent_target || 'all' }}
 
@@ -52,11 +52,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: pip
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install -e .
 
       # Stage 1: Validate inputs
       - name: Validate agent target
@@ -70,39 +72,62 @@ jobs:
               REGISTRY.get_agent(target)
               print(f'[validate] Agent {target!r} found in registry')
           except KeyError as e:
-              print(f'[validate] ✗ {e}', file=sys.stderr)
+              print(f'[validate] \u2717 {e}', file=sys.stderr)
               sys.exit(1)
           "
           else
             echo "[validate] Deploying all agents"
           fi
 
-      # Stage 2-3: Azure login via OIDC (AZURE_CLIENT_ID_{ENV}, shared tenant/subscription)
+      # Compute the uppercase environment suffix for per-env secrets
+      - name: Resolve environment suffix
+        id: env-suffix
+        run: echo "suffix=$(echo '${{ inputs.environment }}' | tr '[:lower:]' '[:upper:]')" >> "$GITHUB_OUTPUT"
+
+      # Stage 2-3: Azure login via OIDC
       - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets[format('AZURE_CLIENT_ID_{0}', env.ENVIRONMENT == 'dev' && 'DEV' || env.ENVIRONMENT == 'qa' && 'QA' || 'PROD')] }}
+          client-id: ${{ secrets[format('AZURE_CLIENT_ID_{0}', steps.env-suffix.outputs.suffix)] }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Stage 2: Provision shared infrastructure
+      # Stage 2: Provision shared infrastructure (Terraform)
+      - name: Set up Terraform
+        if: env.INFRA_TOOL == 'terraform'
+        uses: hashicorp/setup-terraform@v3
+
       - name: Provision shared infra (Terraform)
         if: env.INFRA_TOOL == 'terraform'
         working-directory: infra/terraform
         env:
           ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets[format('AZURE_CLIENT_ID_{0}', env.ENVIRONMENT == 'dev' && 'DEV' || env.ENVIRONMENT == 'qa' && 'QA' || 'PROD')] }}
+          ARM_CLIENT_ID: ${{ secrets[format('AZURE_CLIENT_ID_{0}', steps.env-suffix.outputs.suffix)] }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
-          terraform init
+          terraform init \
+            -backend-config="resource_group_name=${{ secrets.TF_BACKEND_RESOURCE_GROUP }}" \
+            -backend-config="storage_account_name=${{ secrets.TF_BACKEND_STORAGE_ACCOUNT }}" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=foundryagent-${{ env.ENVIRONMENT }}.tfstate"
           terraform apply -auto-approve -var-file=envs/${{ env.ENVIRONMENT }}.tfvars
 
+      # Stage 2: Provision shared infrastructure (Bicep)
       - name: Resolve Bicep region
         if: env.INFRA_TOOL == 'bicep'
         id: bicep-region
         run: |
-          REGION=$(grep -oP "param location = '\K[^']+" "infra/bicep/parameters/${{ env.ENVIRONMENT }}.bicepparam")
+          PARAM_FILE="infra/bicep/parameters/${{ env.ENVIRONMENT }}.bicepparam"
+          if [ ! -f "$PARAM_FILE" ]; then
+            echo "::error::Parameter file not found: $PARAM_FILE"
+            exit 1
+          fi
+          REGION=$(grep -oP "param location = '\K[^']+" "$PARAM_FILE")
+          if [ -z "$REGION" ]; then
+            echo "::error::Could not extract location from $PARAM_FILE"
+            exit 1
+          fi
           echo "region=${REGION}" >> "$GITHUB_OUTPUT"
 
       - name: Provision shared infra (Bicep)
@@ -115,8 +140,7 @@ jobs:
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/${{ env.ENVIRONMENT }}.bicepparam
 
-      # Stage 3: Provision Foundry (conditional)
-      # Foundry provisioning is handled within main.tf/main.bicep via use_existing_foundry flag
+      # Stage 3: Foundry provisioning handled within main.tf/main.bicep via use_existing_foundry flag
 
       # Stage 4: Export outputs
       - name: Set connection string from secret (existing Foundry)

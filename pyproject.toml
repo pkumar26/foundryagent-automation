@@ -39,7 +39,7 @@ line_length = 100
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
-    "integration: marks tests as integration tests (require Azure credentials)",
+    "integration: marks tests requiring live Azure credentials (deselect with '-m \"not integration\"')",
     "code_helper: marks tests for the code-helper agent",
     "doc_assistant: marks tests for the doc-assistant agent",
     "scaffolding: marks tests for the agent scaffolding script",
