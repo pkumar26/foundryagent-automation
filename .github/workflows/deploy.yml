@@ -39,16 +39,17 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment || 'dev' }}
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       ENVIRONMENT: ${{ inputs.environment || 'dev' }}
       INFRA_TOOL: ${{ inputs.infra_tool || 'terraform' }}
       USE_EXISTING_FOUNDRY: ${{ inputs.use_existing_foundry || 'true' }}
       AGENT_TARGET: ${{ inputs.agent_target || 'all' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: "3.11"
 
@@ -62,13 +63,15 @@ jobs:
         run: |
           if [ "$AGENT_TARGET" != "all" ]; then
             python -c "
+          import os, sys
           from agents.registry import REGISTRY
+          target = os.environ['AGENT_TARGET']
           try:
-              REGISTRY.get_agent('$AGENT_TARGET')
-              print(f'[validate] Agent \\'$AGENT_TARGET\\' found in registry')
+              REGISTRY.get_agent(target)
+              print(f'[validate] Agent {target!r} found in registry')
           except KeyError as e:
-              print(f'[validate] ✗ {e}')
-              exit(1)
+              print(f'[validate] ✗ {e}', file=sys.stderr)
+              sys.exit(1)
           "
           else
             echo "[validate] Deploying all agents"
@@ -76,8 +79,9 @@ jobs:
 
       # Stage 2-3: Azure login via OIDC
       - name: Azure Login (OIDC)
-        uses: azure/login@v2
+        uses: azure/login@v2.4.0
         with:
+          auth-type: IDENTITY
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
