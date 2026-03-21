@@ -208,3 +208,7 @@ See the **[Infrastructure Guide](docs/infrastructure-guide.md)** for step-by-ste
 ## Specification
 
 Full design documents: [`specs/003-foundry-agent-platform/`](specs/003-foundry-agent-platform/)
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
