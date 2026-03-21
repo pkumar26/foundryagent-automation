@@ -1,10 +1,13 @@
 """Thread-and-run lifecycle helper for agent interactions."""
 
 import importlib
+import logging
 
 from azure.ai.agents.models import MessageRole
 
 from agents._base.client import get_client
+
+logger = logging.getLogger(__name__)
 
 
 class AgentRunError(Exception):
@@ -16,7 +19,6 @@ def run_agent(
     agent_id: str,
     prompt: str,
     agent_name: str | None = None,
-    timeout: int = 120,
 ) -> str:
     """Execute a full thread-and-run lifecycle.
 
@@ -27,14 +29,12 @@ def run_agent(
         agent_id: The deployed agent's ID.
         prompt: The user message to send.
         agent_name: Agent name (e.g. "code-helper") to load tools for auto-execution.
-        timeout: Maximum seconds to wait for run completion.
 
     Returns:
         The agent's response text.
 
     Raises:
         AgentRunError: If the run fails or is cancelled.
-        TimeoutError: If the run does not complete within the timeout.
     """
     client = get_client(connection_string)
 
@@ -44,6 +44,7 @@ def run_agent(
 
     # Create thread
     thread = client.threads.create()
+    logger.info("Created thread %s for agent %s", thread.id, agent_id)
 
     try:
         # Send message
@@ -81,7 +82,7 @@ def run_agent(
         try:
             client.threads.delete(thread.id)
         except Exception:
-            pass
+            logger.warning("Failed to delete thread %s", thread.id)
 
 
 def _register_agent_tools(client, agent_name: str) -> None:

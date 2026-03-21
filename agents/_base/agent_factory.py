@@ -1,12 +1,15 @@
 """Shared agent factory — create or idempotently update agents in Azure AI Foundry."""
 
 import importlib
+import logging
 from pathlib import Path
 
 from azure.ai.agents.models import Agent
 
 from agents._base.client import get_client
 from agents._base.config import FoundryBaseConfig
+
+logger = logging.getLogger(__name__)
 
 
 def create_or_update_agent(config: FoundryBaseConfig) -> Agent:
@@ -64,6 +67,7 @@ def create_or_update_agent(config: FoundryBaseConfig) -> Agent:
             instructions=instructions,
             tools=tool_definitions,
         )
+        logger.info("Updated agent '%s' (id: %s)", config.agent_name, agent.id)
     else:
         agent = client.create_agent(
             model=config.agent_model,
@@ -71,6 +75,7 @@ def create_or_update_agent(config: FoundryBaseConfig) -> Agent:
             instructions=instructions,
             tools=tool_definitions,
         )
+        logger.info("Created agent '%s' (id: %s)", config.agent_name, agent.id)
 
     return agent
 
@@ -112,8 +117,8 @@ def _append_integration_tools(config: FoundryBaseConfig, tools: list) -> list:
             knowledge_tool = knowledge_mod.get_knowledge_tool(config)
             if knowledge_tool is not None:
                 tools.append(knowledge_tool)
-        except (ModuleNotFoundError, AttributeError):
-            pass
+        except (ModuleNotFoundError, AttributeError) as exc:
+            logger.warning("Failed to load knowledge integration for %s: %s", module_name, exc)
 
     # GitHub MCP integration
     if getattr(config, "github_mcp_enabled", False):
@@ -122,7 +127,7 @@ def _append_integration_tools(config: FoundryBaseConfig, tools: list) -> list:
             mcp_tool = mcp_mod.get_github_mcp_tool(config)
             if mcp_tool is not None:
                 tools.append(mcp_tool)
-        except (ModuleNotFoundError, AttributeError):
-            pass
+        except (ModuleNotFoundError, AttributeError) as exc:
+            logger.warning("Failed to load GitHub MCP integration for %s: %s", module_name, exc)
 
     return tools

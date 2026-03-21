@@ -22,14 +22,19 @@ These tools are server-side — the SDK sends the tool definitions to Azure, and
 ## Architecture: How Tools Plug In
 
 ```
-agents/code_helper/
-├── tools/                      # Local Python tools (FunctionTool)
-│   ├── __init__.py             # Exports TOOLS list
-│   └── sample_tool.py          # greet_user function
-└── integrations/               # External service tools
-    ├── __init__.py
-    ├── github_mcp.py           # GitHub OpenAPI tool
-    └── knowledge.py            # Azure AI Search tool
+agents/
+├── _base/
+│   └── integrations/               # Shared integration modules
+│       ├── __init__.py
+│       └── github_mcp.py           # Canonical GitHub OpenAPI spec + tool
+└── code_helper/
+    ├── tools/                      # Local Python tools (FunctionTool)
+    │   ├── __init__.py             # Exports TOOLS list
+    │   └── sample_tool.py          # greet_user function
+    └── integrations/               # Agent-specific re-exports
+        ├── __init__.py
+        ├── github_mcp.py           # Re-exports from _base
+        └── knowledge.py            # Azure AI Search tool
 ```
 
 The agent factory (`agents/_base/agent_factory.py`) merges both sources:
@@ -193,7 +198,7 @@ def get_github_mcp_tool(config: FoundryBaseConfig):
     )
 ```
 
-> **Tip**: The `doc-assistant` agent re-exports the same tool via `from agents.code_helper.integrations.github_mcp import get_github_mcp_tool`. This avoids duplicating the spec.
+> **Tip**: The canonical implementation lives in `agents/_base/integrations/github_mcp.py`. Both `code_helper` and `doc_assistant` re-export it via `from agents._base.integrations.github_mcp import get_github_mcp_tool`. New agents scaffolded with `create_agent.py` use the same import automatically.
 
 ### Step 4: Update Config
 

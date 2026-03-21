@@ -20,6 +20,7 @@ A production-grade, multi-agent platform built on the **Azure AI Foundry Agent S
 ```
 agents/
 ├── _base/              # Shared: config, client, factory, run lifecycle, tools
+│   └── integrations/   # Shared integration modules (GitHub MCP, etc.)
 ├── code_helper/        # Agent 1: coding assistant with greeting tool
 ├── doc_assistant/      # Agent 2: documentation helper with summarisation tool
 └── registry.py         # Central agent registry
@@ -87,7 +88,8 @@ uv sync --group dev
 uv run pytest tests/ -m "not integration" -v
 
 # Integration tests (requires FOUNDRY_PROJECT_CONNECTION_STRING)
-# Export your connection string first — .env is not auto-loaded by pytest:
+# pydantic-settings loads .env from the working directory automatically.
+# When running from a different directory, export the variable manually:
 export FOUNDRY_PROJECT_CONNECTION_STRING=$(grep FOUNDRY_PROJECT_CONNECTION_STRING .env | cut -d= -f2-)
 uv run pytest tests/ -m integration -v
 
@@ -130,6 +132,33 @@ Interactive onboarding for developers new to Azure AI Foundry:
 - **[02_build_and_run_agent.ipynb](notebooks/02_build_and_run_agent.ipynb)** — Create, run, and interact with an agent
 - **[03_scaffold_agent.ipynb](notebooks/03_scaffold_agent.ipynb)** — Scaffold a new agent end-to-end
 
+## Programmatic API
+
+The `agents` package exposes a public API for scripting and notebook use:
+
+```python
+from agents import REGISTRY, create_or_update_agent, run_agent, AgentRunError
+
+# List registered agents
+for name in REGISTRY:
+    print(name)
+
+# Deploy an agent
+cfg = REGISTRY["code-helper"]
+agent = create_or_update_agent(cfg)
+
+# Run a conversation turn
+response = run_agent(agent.id, "Explain Python decorators")
+print(response)
+```
+
+| Symbol | Description |
+|--------|-------------|
+| `REGISTRY` | `dict[str, FoundryBaseConfig]` — all registered agent configs |
+| `create_or_update_agent` | Idempotently deploy an agent to Azure AI Foundry |
+| `run_agent` | Create a thread, run a prompt, and return the response |
+| `AgentRunError` | Raised when a run fails or is cancelled |
+
 ## Guides
 
 - **[Scaffolding Guide](docs/scaffolding-guide.md)** — YAML format, customisation, and FAQ for agent scaffolding
@@ -143,6 +172,23 @@ Interactive onboarding for developers new to Azure AI Foundry:
 | `test.yml` | PR + push to main | Lint (Black, isort, flake8) + unit tests |
 | `deploy.yml` | Push to main (dev auto) / manual dispatch (qa/prod) | Infra provisioning + agent deployment + integration tests |
 | `create-agent.yml` | Manual dispatch | Scaffold new agent + open PR |
+
+### Workflow Dispatch Inputs
+
+**deploy.yml** (manual dispatch for qa/prod):
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `environment` | yes | — | Target environment: `dev`, `qa`, or `prod` |
+| `infra_tool` | yes | `terraform` | IaC tool: `terraform` or `bicep` |
+| `use_existing_foundry` | yes | `true` | Use an existing Foundry project or provision new |
+| `agent_target` | yes | `all` | Agent to deploy: `all` or a specific agent name |
+
+**create-agent.yml** (scaffold a new agent):
+
+| Input | Required | Description |
+|-------|----------|-------------|
+| `agent_name` | yes | Kebab-case name for the new agent (e.g. `my-agent`) |
 
 Authentication uses OIDC (Workload Identity Federation) — no client secrets.
 

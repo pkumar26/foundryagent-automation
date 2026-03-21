@@ -227,12 +227,12 @@ def _template_github_mcp(module_name: str) -> str:
     return textwrap.dedent(f'''\
         """GitHub MCP integration for the {agent_label} agent.
 
-        Re-exports the shared GitHub OpenAPI tool from the code-helper agent.
+        Re-exports the shared GitHub OpenAPI tool from the base integrations module.
         To customise, replace the import with your own implementation.
         See docs/mcp-integration-guide.md for setup instructions.
         """
 
-        from agents.code_helper.integrations.github_mcp import get_github_mcp_tool  # noqa: F401
+        from agents._base.integrations.github_mcp import get_github_mcp_tool  # noqa: F401
 
         __all__ = ["get_github_mcp_tool"]
     ''')

@@ -2,6 +2,7 @@
 """CLI script for deploying one or all registered agents."""
 
 import argparse
+import logging
 import sys
 
 from agents.registry import REGISTRY
@@ -88,4 +89,5 @@ def _deploy_agent(entry) -> int:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     sys.exit(main())

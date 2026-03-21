@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from agents._base.client import get_client, reset_client
 
 
@@ -57,3 +59,14 @@ class TestGetClient:
                 get_client("https://endpoint-2")
 
                 assert mock_cls.call_count == 2
+
+    @patch("agents._base.client.DefaultAzureCredential")
+    @patch("agents._base.client.AgentsClient")
+    def test_raises_on_endpoint_mismatch(self, mock_client_cls, mock_cred_cls):
+        """Should raise ValueError when called with a different endpoint."""
+        mock_client_cls.return_value = MagicMock()
+
+        get_client("https://endpoint-A")
+
+        with pytest.raises(ValueError, match="Cannot reinitialize"):
+            get_client("https://endpoint-B")
