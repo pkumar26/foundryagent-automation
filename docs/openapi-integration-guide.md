@@ -1,4 +1,4 @@
-# MCP & External Tools Integration Guide
+# OpenAPI & External Tools Integration Guide
 
 [![Azure AI Foundry](https://img.shields.io/badge/Azure%20AI-Foundry-0078D4?logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/en-us/products/ai-services)
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.x-6BA539?logo=openapiinitiative&logoColor=white)](https://www.openapis.org/)
@@ -26,14 +26,14 @@ agents/
 ├── _base/
 │   └── integrations/               # Shared integration modules
 │       ├── __init__.py
-│       └── github_mcp.py           # Canonical GitHub OpenAPI spec + tool
+│       └── github_openapi.py           # Canonical GitHub OpenAPI spec + tool
 └── code_helper/
     ├── tools/                      # Local Python tools (FunctionTool)
     │   ├── __init__.py             # Exports TOOLS list
     │   └── sample_tool.py          # greet_user function
     └── integrations/               # Agent-specific re-exports
         ├── __init__.py
-        ├── github_mcp.py           # Re-exports from _base
+        ├── github_openapi.py           # Re-exports from _base
         └── knowledge.py            # Azure AI Search tool
 ```
 
@@ -43,7 +43,7 @@ The agent factory (`agents/_base/agent_factory.py`) merges both sources:
 2. Conditionally appends integration tools from `integrations/`
 3. Passes all tool definitions to `create_agent()` / `update_agent()`
 
-## GitHub MCP via OpenAPI
+## GitHub Integration via OpenAPI
 
 GitHub exposes a REST API with an OpenAPI spec. You can connect your agent to GitHub using `OpenApiTool`.
 
@@ -156,10 +156,10 @@ spec = json.loads(Path("specs/github-openapi.json").read_text())
 
 ### Step 3: Implement the Integration
 
-Replace the stub in `agents/code_helper/integrations/github_mcp.py` (the actual implementation is already provided — see `agents/code_helper/integrations/github_mcp.py` for the full code). The key implementation pattern:
+Replace the stub in `agents/code_helper/integrations/github_openapi.py` (the actual implementation is already provided — see `agents/code_helper/integrations/github_openapi.py` for the full code). The key implementation pattern:
 
 ```python
-"""GitHub MCP integration for the code-helper agent."""
+"""GitHub OpenAPI integration for the code-helper agent."""
 
 from azure.ai.agents.models import (
     OpenApiTool,
@@ -172,15 +172,15 @@ from agents._base.config import FoundryBaseConfig
 GITHUB_SPEC = { ... }  # Full spec from Step 2 above
 
 
-def get_github_mcp_tool(config: FoundryBaseConfig):
+def get_github_openapi_tool(config: FoundryBaseConfig):
     """Return a GitHub OpenAPI tool, or None if disabled."""
-    if not getattr(config, "github_mcp_enabled", False):
+    if not getattr(config, "github_openapi_enabled", False):
         return None
 
-    connection_id = getattr(config, "github_mcp_connection_id", "")
+    connection_id = getattr(config, "github_openapi_connection_id", "")
     if not connection_id:
         raise ValueError(
-            "GITHUB_MCP_CONNECTION_ID is required when GITHUB_MCP_ENABLED=true. "
+            "GITHUB_OPENAPI_CONNECTION_ID is required when GITHUB_OPENAPI_ENABLED=true. "
             "Create a connection in Azure AI Foundry and set the connection ID."
         )
 
@@ -198,7 +198,7 @@ def get_github_mcp_tool(config: FoundryBaseConfig):
     )
 ```
 
-> **Tip**: The canonical implementation lives in `agents/_base/integrations/github_mcp.py`. Both `code_helper` and `doc_assistant` re-export it via `from agents._base.integrations.github_mcp import get_github_mcp_tool`. New agents scaffolded with `create_agent.py` use the same import automatically.
+> **Tip**: The canonical implementation lives in `agents/_base/integrations/github_openapi.py`. Both `code_helper` and `doc_assistant` re-export it via `from agents._base.integrations.github_openapi import get_github_openapi_tool`. New agents scaffolded with `create_agent.py` use the same import automatically.
 
 ### Step 4: Update Config
 
@@ -212,16 +212,16 @@ class CodeHelperConfig(FoundryBaseConfig):
     agent_instructions_path: str = "agents/code_helper/instructions.md"
 
     # GitHub integration
-    github_mcp_enabled: bool = False
-    github_mcp_connection_id: str = ""  # Azure AI Foundry connection ID
+    github_openapi_enabled: bool = False
+    github_openapi_connection_id: str = ""  # Azure AI Foundry connection ID
 ```
 
 ### Step 5: Set Environment Variables and Deploy
 
 ```bash
 # .env
-GITHUB_MCP_ENABLED=true
-GITHUB_MCP_CONNECTION_ID=/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.CognitiveServices/accounts/<account>/projects/<project>/connections/github-mcp
+GITHUB_OPENAPI_ENABLED=true
+GITHUB_OPENAPI_CONNECTION_ID=/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.CognitiveServices/accounts/<account>/projects/<project>/connections/github-mcp
 
 # Deploy
 uv run python scripts/deploy_agent.py --agent code-helper
@@ -487,7 +487,7 @@ The platform has two built-in integration hooks per agent:
 | Hook | Config Flag | File | Purpose |
 |------|-------------|------|---------|
 | Knowledge source | `knowledge_source_enabled` | `integrations/knowledge.py` | Azure AI Search |
-| GitHub MCP | `github_mcp_enabled` | `integrations/github_mcp.py` | GitHub API via OpenAPI |
+| GitHub OpenAPI | `github_openapi_enabled` | `integrations/github_openapi.py` | GitHub API via OpenAPI |
 
 The agent factory calls these automatically during deploy. To add more integration hooks (e.g., Bing, Code Interpreter), either:
 
@@ -498,8 +498,8 @@ The agent factory calls these automatically during deploy. To add more integrati
 
 ```bash
 # GitHub OpenAPI integration
-GITHUB_MCP_ENABLED=true
-GITHUB_MCP_CONNECTION_ID=/subscriptions/<sub>/resourceGroups/<rg>/providers/...
+GITHUB_OPENAPI_ENABLED=true
+GITHUB_OPENAPI_CONNECTION_ID=/subscriptions/<sub>/resourceGroups/<rg>/providers/...
 
 # Azure AI Search integration
 KNOWLEDGE_SOURCE_ENABLED=true

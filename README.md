@@ -20,7 +20,7 @@ A production-grade, multi-agent platform built on the **Azure AI Foundry Agent S
 ```
 agents/
 ├── _base/              # Shared: config, client, factory, run lifecycle, tools
-│   └── integrations/   # Shared integration modules (GitHub MCP, etc.)
+│   └── integrations/   # Shared integration modules (GitHub OpenAPI, etc.)
 ├── code_helper/        # Agent 1: coding assistant with greeting tool
 ├── doc_assistant/      # Agent 2: documentation helper with summarisation tool
 └── registry.py         # Central agent registry
@@ -163,7 +163,7 @@ print(response)
 
 - **[Scaffolding Guide](docs/scaffolding-guide.md)** — YAML format, customisation, and FAQ for agent scaffolding
 - **[Custom Tools Guide](docs/custom-tools-guide.md)** — How to write, test, and deploy custom Python tool functions
-- **[MCP & External Tools Guide](docs/mcp-integration-guide.md)** — Connect agents to GitHub, Azure AI Search, Bing, and any OpenAPI service
+- **[OpenAPI & External Tools Guide](docs/openapi-integration-guide.md)** — Connect agents to GitHub, Azure AI Search, Bing, and any OpenAPI service
 
 ## CI/CD
 

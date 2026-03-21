@@ -155,10 +155,10 @@ def _template_config(
             agent_model: str = "{model}"
             agent_instructions_path: str = "{instructions_path}"
             knowledge_source_enabled: bool = False
-            github_mcp_enabled: bool = False
+            github_openapi_enabled: bool = False
             azure_ai_search_connection_id: str = ""
             azure_ai_search_index_name: str = ""
-            github_mcp_connection_id: str = ""
+            github_openapi_connection_id: str = ""
     ''')
 
 
@@ -221,20 +221,20 @@ def _template_tools_init(module_name: str) -> str:
     ''')
 
 
-def _template_github_mcp(module_name: str) -> str:
-    """Return integrations/github_mcp.py content for the scaffolded agent."""
+def _template_github_openapi(module_name: str) -> str:
+    """Return integrations/github_openapi.py content for the scaffolded agent."""
     agent_label = module_name.replace("_", "-")
-    return textwrap.dedent(f'''\
-        """GitHub MCP integration for the {agent_label} agent.
+    return textwrap.dedent(f'''
+        """GitHub OpenAPI integration for the {agent_label} agent.
 
         Re-exports the shared GitHub OpenAPI tool from the base integrations module.
         To customise, replace the import with your own implementation.
-        See docs/mcp-integration-guide.md for setup instructions.
+        See docs/openapi-integration-guide.md for setup instructions.
         """
 
-        from agents._base.integrations.github_mcp import get_github_mcp_tool  # noqa: F401
+        from agents._base.integrations.github_openapi import get_github_openapi_tool  # noqa: F401
 
-        __all__ = ["get_github_mcp_tool"]
+        __all__ = ["get_github_openapi_tool"]
     ''')
 
 
@@ -526,7 +526,7 @@ def _generate_agent_files(
         (base / "tools" / "__init__.py", _template_tools_init(module_name)),
         (base / "tools" / "sample_tool.py", _template_sample_tool(display_name)),
         (base / "integrations" / "__init__.py", ""),
-        (base / "integrations" / "github_mcp.py", _template_github_mcp(module_name)),
+        (base / "integrations" / "github_openapi.py", _template_github_openapi(module_name)),
         (base / "integrations" / "knowledge.py", _template_knowledge(module_name)),
     ]
 

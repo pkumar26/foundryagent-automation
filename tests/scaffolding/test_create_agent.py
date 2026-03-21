@@ -170,7 +170,7 @@ class TestScaffoldCreatesAgentDirectory:
         assert (agent_dir / "tools" / "__init__.py").exists()
         assert (agent_dir / "tools" / "sample_tool.py").exists()
         assert (agent_dir / "integrations" / "__init__.py").exists()
-        assert (agent_dir / "integrations" / "github_mcp.py").exists()
+        assert (agent_dir / "integrations" / "github_openapi.py").exists()
         assert (agent_dir / "integrations" / "knowledge.py").exists()
 
         # Verify config content

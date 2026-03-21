@@ -24,7 +24,7 @@ def create_or_update_agent(config: FoundryBaseConfig) -> Agent:
     1. Load instructions from config.agent_instructions_path
     2. Collect tools from the agent's tools/ module
     3. Conditionally append knowledge tool (if KNOWLEDGE_SOURCE_ENABLED)
-    4. Conditionally append GitHub MCP tool (if GITHUB_MCP_ENABLED)
+    4. Conditionally append GitHub OpenAPI tool (if GITHUB_OPENAPI_ENABLED)
     5. List existing agents, find by name
     6. If found: update_agent() with new instructions, model, tools
     7. If not found: create_agent() with all parameters
@@ -54,8 +54,8 @@ def create_or_update_agent(config: FoundryBaseConfig) -> Agent:
 | Instructions file empty | Raise `ValueError` | No API call made |
 | `KNOWLEDGE_SOURCE_ENABLED=false` | `get_knowledge_tool()` returns `None` | Knowledge tool not appended |
 | `KNOWLEDGE_SOURCE_ENABLED=true` | `get_knowledge_tool()` returns tool def | Knowledge tool appended to tools list |
-| `GITHUB_MCP_ENABLED=false` | `get_github_mcp_tool()` returns `None` | MCP tool not appended |
-| `GITHUB_MCP_ENABLED=true` | `get_github_mcp_tool()` returns tool def | MCP tool appended to tools list |
+| `GITHUB_OPENAPI_ENABLED=false` | `get_github_openapi_tool()` returns `None` | OpenAPI tool not appended |
+| `GITHUB_OPENAPI_ENABLED=true` | `get_github_openapi_tool()` returns tool def | OpenAPI tool appended to tools list |
 
 ## Idempotency Guarantee
 
@@ -65,5 +65,5 @@ Running `create_or_update_agent(config)` N times with the same config produces t
 
 - `agents._base.client.get_client()` — singleton AIProjectClient
 - `agents.<name>.integrations.knowledge.get_knowledge_tool(config)` — optional tool
-- `agents.<name>.integrations.github_mcp.get_github_mcp_tool(config)` — optional tool
+- `agents.<name>.integrations.github_openapi.get_github_openapi_tool(config)` — optional tool
 - Agent's `tools/` module — FunctionTool definitions

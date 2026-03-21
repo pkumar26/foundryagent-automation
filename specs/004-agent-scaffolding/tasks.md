@@ -64,7 +64,7 @@
 
 ### Implementation for User Story 1
 
-- [X] T014 [P] [US1] Implement agent file templates in `scripts/create_agent.py` — `_template_config()`, `_template_instructions()`, `_template_sample_tool()`, `_template_tools_init()`, `_template_github_mcp()`, `_template_knowledge()` using `textwrap.dedent` and f-strings; match patterns from `agents/code_helper/` exactly
+- [X] T014 [P] [US1] Implement agent file templates in `scripts/create_agent.py` — `_template_config()`, `_template_instructions()`, `_template_sample_tool()`, `_template_tools_init()`, `_template_github_openapi()`, `_template_knowledge()` using `textwrap.dedent` and f-strings; match patterns from `agents/code_helper/` exactly
 - [X] T015 [P] [US1] Implement test file templates in `scripts/create_agent.py` — `_template_conftest()`, `_template_test_tools()`, `_template_test_agent_create()`, `_template_test_agent_run()` matching patterns from `tests/code_helper/`
 - [X] T016 [US1] Implement `_generate_agent_files()` in `scripts/create_agent.py` — create `agents/{module}/` directory tree and write all 8 files using templates from T014
 - [X] T017 [US1] Implement `_generate_test_files()` in `scripts/create_agent.py` — create `tests/{module}/` directory tree and write all 5 files using templates from T015

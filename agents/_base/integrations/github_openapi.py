@@ -1,4 +1,4 @@
-"""Shared GitHub MCP integration — OpenAPI tool for GitHub API access."""
+"""Shared GitHub OpenAPI integration — OpenAPI tool for GitHub API access."""
 
 from azure.ai.agents.models import (
     OpenApiConnectionAuthDetails,
@@ -195,25 +195,25 @@ GITHUB_SPEC = {
 }
 
 
-def get_github_mcp_tool(config: FoundryBaseConfig):
+def get_github_openapi_tool(config: FoundryBaseConfig):
     """Return a GitHub OpenAPI tool, or None if disabled.
 
     Args:
-        config: Agent configuration with github_mcp_enabled flag.
+        config: Agent configuration with github_openapi_enabled flag.
 
     Returns:
         OpenApiTool when enabled, None when disabled.
 
     Raises:
-        ValueError: If enabled but GITHUB_MCP_CONNECTION_ID is not set.
+        ValueError: If enabled but GITHUB_OPENAPI_CONNECTION_ID is not set.
     """
-    if not getattr(config, "github_mcp_enabled", False):
+    if not getattr(config, "github_openapi_enabled", False):
         return None
 
-    connection_id = getattr(config, "github_mcp_connection_id", "")
+    connection_id = getattr(config, "github_openapi_connection_id", "")
     if not connection_id:
         raise ValueError(
-            "GITHUB_MCP_CONNECTION_ID is required when GITHUB_MCP_ENABLED=true. "
+            "GITHUB_OPENAPI_CONNECTION_ID is required when GITHUB_OPENAPI_ENABLED=true. "
             "Create a connection in Azure AI Foundry and set the connection ID."
         )
 

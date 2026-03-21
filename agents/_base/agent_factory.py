@@ -19,7 +19,7 @@ def create_or_update_agent(config: FoundryBaseConfig) -> Agent:
     1. Load instructions from config.agent_instructions_path
     2. Collect tools from the agent's tools/ module
     3. Conditionally append knowledge tool (if KNOWLEDGE_SOURCE_ENABLED)
-    4. Conditionally append GitHub MCP tool (if GITHUB_MCP_ENABLED)
+    4. Conditionally append GitHub OpenAPI tool (if GITHUB_OPENAPI_ENABLED)
     5. List existing agents, find by name
     6. If found: update_agent() with new instructions, model, tools
     7. If not found: create_agent() with all parameters
@@ -120,14 +120,14 @@ def _append_integration_tools(config: FoundryBaseConfig, tools: list) -> list:
         except (ModuleNotFoundError, AttributeError) as exc:
             logger.warning("Failed to load knowledge integration for %s: %s", module_name, exc)
 
-    # GitHub MCP integration
-    if getattr(config, "github_mcp_enabled", False):
+    # GitHub OpenAPI integration
+    if getattr(config, "github_openapi_enabled", False):
         try:
-            mcp_mod = importlib.import_module(f"agents.{module_name}.integrations.github_mcp")
-            mcp_tool = mcp_mod.get_github_mcp_tool(config)
-            if mcp_tool is not None:
-                tools.append(mcp_tool)
+            openapi_mod = importlib.import_module(f"agents.{module_name}.integrations.github_openapi")
+            openapi_tool = openapi_mod.get_github_openapi_tool(config)
+            if openapi_tool is not None:
+                tools.append(openapi_tool)
         except (ModuleNotFoundError, AttributeError) as exc:
-            logger.warning("Failed to load GitHub MCP integration for %s: %s", module_name, exc)
+            logger.warning("Failed to load GitHub OpenAPI integration for %s: %s", module_name, exc)
 
     return tools

@@ -31,11 +31,11 @@
 | `agent_model` | `str` | Env: `AGENT_MODEL` | `"gpt-4o"` | Non-empty |
 | `agent_instructions_path` | `str` | Env: `AGENT_INSTRUCTIONS_PATH` | (per agent) | File must exist |
 | `knowledge_source_enabled` | `bool` | Env: `KNOWLEDGE_SOURCE_ENABLED` | `False` | — |
-| `github_mcp_enabled` | `bool` | Env: `GITHUB_MCP_ENABLED` | `False` | — |
+| `github_openapi_enabled` | `bool` | Env: `GITHUB_OPENAPI_ENABLED` | `False` | — |
 | `azure_ai_search_endpoint` | `str` | Env: `AZURE_AI_SEARCH_ENDPOINT` | `""` | Required if knowledge_source_enabled |
 | `azure_ai_search_index_name` | `str` | Env: `AZURE_AI_SEARCH_INDEX_NAME` | `""` | Required if knowledge_source_enabled |
-| `github_mcp_endpoint` | `str` | Env: `GITHUB_MCP_ENDPOINT` | `""` | Required if github_mcp_enabled |
-| `github_mcp_token_secret_name` | `str` | Env: `GITHUB_MCP_TOKEN_SECRET_NAME` | `""` | Required if github_mcp_enabled |
+| `github_openapi_endpoint` | `str` | Env: `GITHUB_OPENAPI_ENDPOINT` | `""` | Required if github_openapi_enabled |
+| `github_openapi_token_secret_name` | `str` | Env: `GITHUB_OPENAPI_TOKEN_SECRET_NAME` | `""` | Required if github_openapi_enabled |
 
 **Relationships**: Inherits from `FoundryBaseConfig`. Referenced by `AgentRegistryEntry`. Consumed by `agent_factory.create_or_update_agent()`.
 
@@ -152,9 +152,9 @@ queued → in_progress → completed
 | Stub | File | Feature Flag | Returns When Enabled |
 |------|------|-------------|---------------------|
 | Knowledge Source | `integrations/knowledge.py` | `KNOWLEDGE_SOURCE_ENABLED` | Tool definition (future) |
-| GitHub MCP | `integrations/github_mcp.py` | `GITHUB_MCP_ENABLED` | Tool definition (future) |
+| GitHub OpenAPI | `integrations/github_openapi.py` | `GITHUB_OPENAPI_ENABLED` | Tool definition (future) |
 
-**Contract**: `get_knowledge_tool(config) -> Optional[ToolDefinition]` and `get_github_mcp_tool(config) -> Optional[ToolDefinition]`
+**Contract**: `get_knowledge_tool(config) -> Optional[ToolDefinition]` and `get_github_openapi_tool(config) -> Optional[ToolDefinition]`
 
 ---
 

@@ -33,4 +33,4 @@
 
 - Technology references (Python, Terraform, Bicep, GitHub Actions, etc.) appear throughout the spec because they are **feature requirements**, not implementation choices — the product is a developer platform and the users are developers. These tools are part of WHAT is being built, not HOW it is coded.
 - All gaps in the user's description were resolved with informed defaults documented in the Assumptions section — no clarification markers were needed.
-- Deferred scope (knowledge source integration, GitHub MCP integration, agent-to-agent orchestration) is explicitly documented with architectural stubs reserved in the spec.
+- Deferred scope (knowledge source integration, GitHub OpenAPI integration, agent-to-agent orchestration) is explicitly documented with architectural stubs reserved in the spec.
