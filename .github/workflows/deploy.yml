@@ -79,7 +79,7 @@ jobs:
 
       # Stage 2-3: Azure login via OIDC
       - name: Azure Login (OIDC)
-        uses: azure/login@v2.4.0
+        uses: azure/login@v2
         with:
           auth-type: IDENTITY
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
