@@ -49,7 +49,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -77,11 +77,11 @@ jobs:
             echo "[validate] Deploying all agents"
           fi
 
-      # Stage 2-3: Azure login via OIDC
+      # Stage 2-3: Azure login via OIDC (AZURE_CLIENT_ID_{ENV}, shared tenant/subscription)
       - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-id: ${{ secrets[format('AZURE_CLIENT_ID_{0}', env.ENVIRONMENT == 'dev' && 'DEV' || env.ENVIRONMENT == 'qa' && 'QA' || 'PROD')] }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
@@ -91,7 +91,7 @@ jobs:
         working-directory: infra/terraform
         env:
           ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_ID: ${{ secrets[format('AZURE_CLIENT_ID_{0}', env.ENVIRONMENT == 'dev' && 'DEV' || env.ENVIRONMENT == 'qa' && 'QA' || 'PROD')] }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
