@@ -29,6 +29,10 @@ on:
         description: "Agent to deploy (name or 'all')"
         type: string
         default: "all"
+      azure_region:
+        description: "Azure region for deployment"
+        type: string
+        default: "eastus2"
 
 permissions:
   id-token: write
@@ -44,6 +48,7 @@ jobs:
       INFRA_TOOL: ${{ inputs.infra_tool || 'terraform' }}
       USE_EXISTING_FOUNDRY: ${{ inputs.use_existing_foundry || 'true' }}
       AGENT_TARGET: ${{ inputs.agent_target || 'all' }}
+      AZURE_REGION: ${{ inputs.azure_region || 'eastus2' }}
 
     steps:
       - uses: actions/checkout@v5
@@ -104,7 +109,7 @@ jobs:
         uses: azure/arm-deploy@v2
         with:
           scope: subscription
-          region: ${{ vars.AZURE_REGION }}
+          region: ${{ env.AZURE_REGION }}
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/${{ env.ENVIRONMENT }}.bicepparam
 
