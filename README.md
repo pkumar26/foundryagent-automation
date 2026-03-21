@@ -205,10 +205,6 @@ Both Terraform and Bicep produce identical environments:
 
 See the **[Infrastructure Guide](docs/infrastructure-guide.md)** for step-by-step deployment instructions, parameter reference, CI/CD setup, and troubleshooting.
 
-## Specification
-
-Full design documents: [`specs/003-foundry-agent-platform/`](specs/003-foundry-agent-platform/)
-
 ## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
