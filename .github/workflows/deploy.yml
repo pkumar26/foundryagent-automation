@@ -29,10 +29,6 @@ on:
         description: "Agent to deploy (name or 'all')"
         type: string
         default: "all"
-      azure_region:
-        description: "Azure region for deployment"
-        type: string
-        default: "eastus2"
 
 permissions:
   id-token: write
@@ -48,7 +44,6 @@ jobs:
       INFRA_TOOL: ${{ inputs.infra_tool || 'terraform' }}
       USE_EXISTING_FOUNDRY: ${{ inputs.use_existing_foundry || 'true' }}
       AGENT_TARGET: ${{ inputs.agent_target || 'all' }}
-      AZURE_REGION: ${{ inputs.azure_region || 'eastus2' }}
 
     steps:
       - uses: actions/checkout@v5
@@ -103,13 +98,20 @@ jobs:
           terraform init
           terraform apply -auto-approve -var-file=envs/${{ env.ENVIRONMENT }}.tfvars
 
+      - name: Resolve Bicep region
+        if: env.INFRA_TOOL == 'bicep'
+        id: bicep-region
+        run: |
+          REGION=$(grep -oP "param location = '\K[^']+" "infra/bicep/parameters/${{ env.ENVIRONMENT }}.bicepparam")
+          echo "region=${REGION}" >> "$GITHUB_OUTPUT"
+
       - name: Provision shared infra (Bicep)
         if: env.INFRA_TOOL == 'bicep'
         id: deploy-bicep
         uses: azure/arm-deploy@v2
         with:
           scope: subscription
-          region: ${{ env.AZURE_REGION }}
+          region: ${{ steps.bicep-region.outputs.region }}
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/${{ env.ENVIRONMENT }}.bicepparam
 
