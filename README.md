@@ -161,6 +161,7 @@ print(response)
 
 ## Guides
 
+- **[Infrastructure Guide](docs/infrastructure-guide.md)** — Deploy Azure infrastructure with Terraform or Bicep (setup, parameters, CI/CD, troubleshooting)
 - **[Scaffolding Guide](docs/scaffolding-guide.md)** — YAML format, customisation, and FAQ for agent scaffolding
 - **[Custom Tools Guide](docs/custom-tools-guide.md)** — How to write, test, and deploy custom Python tool functions
 - **[OpenAPI & External Tools Guide](docs/openapi-integration-guide.md)** — Connect agents to GitHub, Azure AI Search, Bing, and any OpenAPI service
@@ -201,6 +202,8 @@ Both Terraform and Bicep produce identical environments:
 - Foundry Resource (CognitiveServices/AIServices) — conditional
 - AI Search — conditional on `enable_knowledge_source`
 - RBAC role assignments (Contributor, Cognitive Services User, Key Vault Secrets User)
+
+See the **[Infrastructure Guide](docs/infrastructure-guide.md)** for step-by-step deployment instructions, parameter reference, CI/CD setup, and troubleshooting.
 
 ## Specification
 
