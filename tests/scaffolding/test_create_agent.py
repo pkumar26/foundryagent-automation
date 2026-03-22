@@ -161,7 +161,7 @@ class TestScaffoldCreatesAgentDirectory:
         # NFR-4: < 2s
         assert elapsed < 2.0
 
-        assert len(files) == 8
+        assert len(files) == 7
 
         agent_dir = tmp_path / "test_agent"
         assert (agent_dir / "__init__.py").exists()
@@ -170,7 +170,6 @@ class TestScaffoldCreatesAgentDirectory:
         assert (agent_dir / "tools" / "__init__.py").exists()
         assert (agent_dir / "tools" / "sample_tool.py").exists()
         assert (agent_dir / "integrations" / "__init__.py").exists()
-        assert (agent_dir / "integrations" / "github_openapi.py").exists()
         assert (agent_dir / "integrations" / "knowledge.py").exists()
 
         # Verify config content
@@ -419,7 +418,7 @@ class TestScaffoldFromYaml:
         )
 
         # Same file count as CLI
-        assert len(agent_files) == 8
+        assert len(agent_files) == 7
         assert len(test_files) == 5
 
         # Verify agent dir was created

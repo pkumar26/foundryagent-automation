@@ -19,7 +19,7 @@ def agent_config(tmp_path):
     config.agent_model = "gpt-4o"
     config.agent_instructions_path = str(instructions_file)
     config.knowledge_source_enabled = False
-    config.github_openapi_enabled = False
+    config.code_interpreter_enabled = False
     return config
 
 

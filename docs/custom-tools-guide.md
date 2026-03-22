@@ -355,10 +355,6 @@ agents/code_helper/
 
 The factory in `agents/_base/agent_factory.py` imports `agents.{agent_name}.tools` and collects the `TOOLS` list automatically — no other wiring needed.
 
-## What About External APIs?
-
-This guide covers **local Python tools** (`FunctionTool`). To connect your agent to external services like GitHub, Azure AI Search, Bing, or any REST API via OpenAPI specs, see the [OpenAPI & External Tools Guide](openapi-integration-guide.md).
-
 ## Checklist
 
 - [ ] Function has type hints on all parameters

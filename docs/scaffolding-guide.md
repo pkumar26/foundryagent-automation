@@ -18,7 +18,7 @@
 
 ```bash
 # Scaffold a new agent
-python scripts/create_agent.py --name my-agent
+uv run python scripts/create_agent.py --name my-agent
 ```
 
 Output:
@@ -32,8 +32,8 @@ Output:
 [scaffold]   Next steps:
 [scaffold]   1. Edit agents/my_agent/instructions.md with agent instructions
 [scaffold]   2. Add custom tools in agents/my_agent/tools/
-[scaffold]   3. Run tests: pytest tests/my_agent/ -v
-[scaffold]   4. Deploy: python scripts/deploy_agent.py --agent my-agent
+[scaffold]   3. Run tests: uv run pytest tests/my_agent/ -v
+[scaffold]   4. Deploy: uv run python scripts/deploy_agent.py --agent my-agent
 ```
 
 ## CLI Reference
@@ -86,7 +86,7 @@ model: gpt-4o-mini
 ### Usage
 
 ```bash
-python scripts/create_agent.py --from-file agent-config.yaml
+uv run python scripts/create_agent.py --from-file agent-config.yaml
 ```
 
 When `--from-file` is used, the `model` value from the YAML file takes precedence over any `--model` CLI flag.
@@ -114,7 +114,6 @@ agents/{module_name}/
 │   └── sample_tool.py       # Sample greeting tool
 └── integrations/
     ├── __init__.py          # Package init
-    ├── github_openapi.py        # GitHub OpenAPI stub (returns None when disabled)
     └── knowledge.py         # Knowledge source stub (returns None when disabled)
 
 tests/{module_name}/
@@ -127,7 +126,7 @@ tests/{module_name}/
 agents/registry.py           # Updated with import + AgentRegistryEntry
 ```
 
-**Total**: 13 files created + 1 file updated = 14 file operations
+**Total**: 12 files created + 1 file updated = 13 file operations
 
 ## Customise Your Agent
 
@@ -173,14 +172,13 @@ class MyAgentConfig(FoundryBaseConfig):
 
 ### 4. Enable Integrations
 
-To enable knowledge source or GitHub OpenAPI, set the flags in your config:
+To enable knowledge source, set the flag in your config:
 
 ```python
 knowledge_source_enabled: bool = True
-github_openapi_enabled: bool = True
 ```
 
-Then implement the integration functions in `agents/{module_name}/integrations/`. See the [OpenAPI & External Tools Guide](openapi-integration-guide.md) for step-by-step implementation details, auth setup, and examples.
+Then implement the integration functions in `agents/{module_name}/integrations/`.
 
 ### 5. Write Tests
 
@@ -188,13 +186,13 @@ Update the generated test stubs in `tests/{module_name}/` with real assertions:
 
 ```bash
 # Run your agent's tests
-pytest tests/my_agent/ -v
+uv run pytest tests/my_agent/ -v
 ```
 
 ### 6. Deploy
 
 ```bash
-python scripts/deploy_agent.py --agent my-agent
+uv run python scripts/deploy_agent.py --agent my-agent
 ```
 
 ## FAQ
@@ -215,9 +213,9 @@ Create new Python files in `agents/{module_name}/tools/`, define functions and a
 
 Edit `agents/{module_name}/config.py` and update the `agent_model` field's default value. You can also override it via the `AGENT_MODEL` environment variable.
 
-**How do I enable knowledge source or GitHub OpenAPI integration?**
+**How do I enable knowledge source integration?**
 
-Set `knowledge_source_enabled: bool = True` or `github_openapi_enabled: bool = True` in your agent's config class, then implement the corresponding functions in the `integrations/` directory.
+Set `knowledge_source_enabled: bool = True` in your agent's config class, then implement the corresponding function in the `integrations/` directory.
 
 **Can I scaffold multiple agents at once?**
 

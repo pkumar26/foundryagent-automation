@@ -13,7 +13,5 @@ class DocAssistantConfig(FoundryBaseConfig):
     agent_model: str = "gpt-4o"
     agent_instructions_path: str = "agents/doc_assistant/instructions.md"
     knowledge_source_enabled: bool = False
-    github_openapi_enabled: bool = False
     azure_ai_search_connection_id: str = ""
     azure_ai_search_index_name: str = ""
-    github_openapi_connection_id: str = ""

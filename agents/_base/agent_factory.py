@@ -19,11 +19,10 @@ def create_or_update_agent(config: FoundryBaseConfig) -> Agent:
     1. Load instructions from config.agent_instructions_path
     2. Collect tools from the agent's tools/ module
     3. Conditionally append knowledge tool (if KNOWLEDGE_SOURCE_ENABLED)
-    4. Conditionally append GitHub OpenAPI tool (if GITHUB_OPENAPI_ENABLED)
-    5. List existing agents, find by name
-    6. If found: update_agent() with new instructions, model, tools
-    7. If not found: create_agent() with all parameters
-    8. Return the Agent object
+    4. List existing agents, find by name
+    5. If found: update_agent() with new instructions, model, tools
+    6. If not found: create_agent() with all parameters
+    7. Return the Agent object
 
     Args:
         config: An agent-specific config object (subclass of FoundryBaseConfig).
@@ -35,8 +34,12 @@ def create_or_update_agent(config: FoundryBaseConfig) -> Agent:
         FileNotFoundError: If the instructions file does not exist.
         ValueError: If the instructions file is empty.
     """
-    # 1. Load instructions
+    # 1. Load instructions — resolve relative paths against the project root
+    #    (the repo root where pyproject.toml lives), not the cwd.
     instructions_path = Path(config.agent_instructions_path)
+    if not instructions_path.is_absolute():
+        project_root = Path(__file__).resolve().parent.parent.parent
+        instructions_path = project_root / instructions_path
     if not instructions_path.exists():
         raise FileNotFoundError(f"Instructions file not found: {instructions_path}")
     instructions = instructions_path.read_text(encoding="utf-8").strip()
@@ -120,14 +123,12 @@ def _append_integration_tools(config: FoundryBaseConfig, tools: list) -> list:
         except (ModuleNotFoundError, AttributeError) as exc:
             logger.warning("Failed to load knowledge integration for %s: %s", module_name, exc)
 
-    # GitHub OpenAPI integration
-    if getattr(config, "github_openapi_enabled", False):
-        try:
-            openapi_mod = importlib.import_module(f"agents.{module_name}.integrations.github_openapi")
-            openapi_tool = openapi_mod.get_github_openapi_tool(config)
-            if openapi_tool is not None:
-                tools.append(openapi_tool)
-        except (ModuleNotFoundError, AttributeError) as exc:
-            logger.warning("Failed to load GitHub OpenAPI integration for %s: %s", module_name, exc)
+
+    # Code Interpreter integration
+    if getattr(config, "code_interpreter_enabled", False):
+        from azure.ai.agents.models import CodeInterpreterTool
+
+        tools.append(CodeInterpreterTool())
+        logger.info("Added Code Interpreter tool for %s", module_name)
 
     return tools

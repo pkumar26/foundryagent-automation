@@ -20,7 +20,7 @@ A production-grade, multi-agent platform built on the **Azure AI Foundry Agent S
 ```
 agents/
 ├── _base/              # Shared: config, client, factory, run lifecycle, tools
-│   └── integrations/   # Shared integration modules (GitHub OpenAPI, etc.)
+│   └── integrations/   # Shared integration modules (knowledge source, etc.)
 ├── code_helper/        # Agent 1: coding assistant with greeting tool
 ├── doc_assistant/      # Agent 2: documentation helper with summarisation tool
 └── registry.py         # Central agent registry
@@ -159,12 +159,16 @@ print(response)
 | `run_agent` | Create a thread, run a prompt, and return the response |
 | `AgentRunError` | Raised when a run fails or is cancelled |
 
+## Agent Documentation
+
+- **[Code Helper](agents/code_helper/README.md)** — General-purpose coding assistant for debugging, code review, and technical Q&A
+- **[Doc Assistant](agents/doc_assistant/README.md)** — Documentation specialist for READMEs, API docs, and technical writing
+
 ## Guides
 
 - **[Infrastructure Guide](docs/infrastructure-guide.md)** — Deploy Azure infrastructure with Terraform or Bicep (setup, parameters, CI/CD, troubleshooting)
 - **[Scaffolding Guide](docs/scaffolding-guide.md)** — YAML format, customisation, and FAQ for agent scaffolding
 - **[Custom Tools Guide](docs/custom-tools-guide.md)** — How to write, test, and deploy custom Python tool functions
-- **[OpenAPI & External Tools Guide](docs/openapi-integration-guide.md)** — Connect agents to GitHub, Azure AI Search, Bing, and any OpenAPI service
 
 ## CI/CD
 
