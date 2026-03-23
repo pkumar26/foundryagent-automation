@@ -21,4 +21,4 @@ def summarise_text(text: str, max_sentences: int = 3) -> str:
 
 
 # Exported tools list — consumed by agent_factory via TOOLS
-TOOLS = [create_function_tool([summarise_text])]
+TOOLS = [create_function_tool(summarise_text)]

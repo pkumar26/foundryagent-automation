@@ -16,4 +16,4 @@ def greet_user(name: str) -> str:
 
 
 # Exported tools list — consumed by agent_factory via TOOLS
-TOOLS = [create_function_tool([greet_user])]
+TOOLS = [create_function_tool(greet_user)]

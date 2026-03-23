@@ -28,13 +28,19 @@ Code Helper is designed for day-to-day developer support — answering questions
 
 ## Configuration
 
-| Setting | Env Variable | Default | Description |
+| Setting | config.py Property | Default | Description |
 |---|---|---|---|
-| Agent name | — | `code-helper` | Identifier used in the registry |
-| Model | — | `gpt-4o` | Azure OpenAI deployment |
-| Knowledge source | `KNOWLEDGE_SOURCE_ENABLED` | `false` | Enable Azure AI Search knowledge base |
-| Search connection | `AZURE_AI_SEARCH_CONNECTION_ID` | — | AI Foundry connection ID for AI Search |
-| Search index | `AZURE_AI_SEARCH_INDEX_NAME` | — | Index name in Azure AI Search |
+| Agent name | `agent_name` | `code-helper` | Identifier used in the registry |
+| Model | `agent_model` | `gpt-4o` | Azure OpenAI deployment |
+| Knowledge source | `knowledge_source_enabled` | `False` | Enable Azure AI Search knowledge base |
+| Search connection | `azure_ai_search_connection_id` | — | AI Foundry connection ID for AI Search |
+| Search index | `azure_ai_search_index_name` | — | Index name in Azure AI Search |
+| Code Interpreter | `code_interpreter_enabled` | `False` | Python execution sandbox |
+| Web Search | `web_search_enabled` | `False` | Web search grounding |
+| GitHub MCP | `github_enabled` | `False` | GitHub MCP server |
+| GitHub connection | `github_project_connection_id` | — | GitHub connection name in Foundry project |
+
+> **Note:** All integration settings are per-agent in `config.py`. The `.env` file is for shared infrastructure only.
 
 ## File Structure
 
@@ -54,7 +60,7 @@ agents/code_helper/
 
 ```bash
 # Deploy
-uv run python scripts/deploy_agent.py --agent code-helper
+uv run python scripts/deploy_agent.py --name code-helper
 
 # Run interactively
 uv run python -m agents._base.run code-helper

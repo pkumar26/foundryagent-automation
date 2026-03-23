@@ -16,5 +16,5 @@ def get_knowledge_tool(config: FoundryBaseConfig):
         return None
     raise NotImplementedError(
         "Knowledge source integration is not yet implemented. "
-        "Set KNOWLEDGE_SOURCE_ENABLED=false to disable."
+        "Set 'knowledge_source_enabled = False' in your agent's config.py to disable."
     )

@@ -15,3 +15,7 @@ class DocAssistantConfig(FoundryBaseConfig):
     knowledge_source_enabled: bool = False
     azure_ai_search_connection_id: str = ""
     azure_ai_search_index_name: str = ""
+    code_interpreter_enabled: bool = False
+    web_search_enabled: bool = False
+    github_enabled: bool = False
+    github_project_connection_id: str = ""
