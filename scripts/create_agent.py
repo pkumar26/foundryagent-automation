@@ -213,7 +213,8 @@ def _template_readme(
         | GitHub MCP | `github_enabled` | `False` | GitHub MCP server |
         | GitHub connection | `github_project_connection_id` | — | GitHub connection name |
 
-        > **Note:** All integration settings are per-agent in `config.py`. The `.env` file is for shared infrastructure only.
+        > **Note:** All integration settings are per-agent in `config.py`.
+        > The `.env` file is for shared infrastructure only.
 
         ## File Structure
 
