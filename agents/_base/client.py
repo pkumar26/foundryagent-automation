@@ -1,46 +1,50 @@
-"""Singleton AgentsClient initialisation using DefaultAzureCredential."""
+"""Singleton AIProjectClient initialisation using DefaultAzureCredential."""
 
 import logging
+import threading
 
-from azure.ai.agents import AgentsClient
+from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 
 logger = logging.getLogger(__name__)
 
-_client: AgentsClient | None = None
+_lock = threading.Lock()
+_client: AIProjectClient | None = None
 _endpoint: str | None = None
 
 
-def get_client(endpoint: str) -> AgentsClient:
-    """Get or create a singleton AgentsClient.
+def get_project_client(endpoint: str) -> AIProjectClient:
+    """Get or create a singleton AIProjectClient.
 
     Args:
-        endpoint: Azure AI Foundry project endpoint URL.
+        endpoint: Azure AI Project endpoint URL.
 
     Returns:
-        A shared AgentsClient instance.
+        A shared AIProjectClient instance.
 
     Raises:
         ValueError: If called with a different endpoint than the existing client.
     """
     global _client, _endpoint
-    if _client is not None and _endpoint != endpoint:
-        raise ValueError(
-            f"Client already initialized with endpoint '{_endpoint}'. "
-            f"Cannot reinitialize with '{endpoint}'. Call reset_client() first."
-        )
-    if _client is None:
-        logger.info("Creating AgentsClient for endpoint: %s", endpoint)
-        _client = AgentsClient(
-            endpoint=endpoint,
-            credential=DefaultAzureCredential(),
-        )
-        _endpoint = endpoint
-    return _client
+    with _lock:
+        if _client is not None and _endpoint != endpoint:
+            raise ValueError(
+                f"Client already initialized with endpoint '{_endpoint}'. "
+                f"Cannot reinitialize with '{endpoint}'. Call reset_client() first."
+            )
+        if _client is None:
+            logger.info("Creating AIProjectClient for endpoint: %s", endpoint)
+            _client = AIProjectClient(
+                endpoint=endpoint,
+                credential=DefaultAzureCredential(),
+            )
+            _endpoint = endpoint
+        return _client
 
 
 def reset_client() -> None:
     """Reset the singleton client. Used for testing."""
     global _client, _endpoint
-    _client = None
-    _endpoint = None
+    with _lock:
+        _client = None
+        _endpoint = None

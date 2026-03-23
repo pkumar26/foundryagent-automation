@@ -1,13 +1,14 @@
-"""Thread-and-run lifecycle helper for agent interactions."""
+"""Conversation-and-response lifecycle helper for agent interactions."""
 
 import importlib
+import json
 import logging
 
-from azure.ai.agents.models import MessageRole
-
-from agents._base.client import get_client
+from agents._base.client import get_project_client
 
 logger = logging.getLogger(__name__)
+
+MAX_FUNCTION_CALL_ITERATIONS = 50
 
 
 class AgentRunError(Exception):
@@ -15,83 +16,137 @@ class AgentRunError(Exception):
 
 
 def run_agent(
-    connection_string: str,
-    agent_id: str,
+    endpoint: str,
+    agent_name: str,
     prompt: str,
-    agent_name: str | None = None,
 ) -> str:
-    """Execute a full thread-and-run lifecycle.
+    """Execute a single-turn conversation with a deployed agent.
 
-    Creates a thread, posts a message, runs the agent, and retrieves the response.
+    Creates a conversation, sends a message, processes the agent response
+    (including any function calls), and returns the response text.
 
     Args:
-        connection_string: Foundry project endpoint URL.
-        agent_id: The deployed agent's ID.
+        endpoint: Azure AI Project endpoint URL.
+        agent_name: The agent name (used in agent_reference and tool lookup).
         prompt: The user message to send.
-        agent_name: Agent name (e.g. "code-helper") to load tools for auto-execution.
 
     Returns:
         The agent's response text.
 
     Raises:
-        AgentRunError: If the run fails or is cancelled.
+        AgentRunError: If the response indicates failure.
     """
-    client = get_client(connection_string)
+    project_client = get_project_client(endpoint)
+    tool_functions = _load_tool_functions(agent_name)
 
-    # Register tool functions for auto-execution if agent_name is provided
-    if agent_name:
-        _register_agent_tools(client, agent_name)
-
-    # Create thread
-    thread = client.threads.create()
-    logger.info("Created thread %s for agent %s", thread.id, agent_id)
-
-    try:
-        # Send message
-        client.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=prompt,
+    with project_client.get_openai_client() as openai_client:
+        # Create conversation with initial message
+        conversation = openai_client.conversations.create(
+            items=[{"type": "message", "role": "user", "content": prompt}],
         )
+        logger.info("Created conversation %s for agent %s", conversation.id, agent_name)
 
-        # Create and process run (SDK handles polling + tool execution)
-        run = client.runs.create_and_process(
-            thread_id=thread.id,
-            agent_id=agent_id,
-            polling_interval=1,
-        )
-
-        # Check terminal status
-        if run.status == "failed":
-            error_msg = getattr(run, "last_error", None)
-            raise AgentRunError(f"Agent run failed: {error_msg or 'Unknown error'}")
-        if run.status == "cancelled":
-            raise AgentRunError("Agent run was cancelled")
-        if run.status != "completed":
-            raise AgentRunError(f"Agent run ended with unexpected status: {run.status}")
-
-        # Retrieve last assistant message
-        last_msg = client.messages.get_last_message_text_by_role(
-            thread_id=thread.id,
-            role=MessageRole.AGENT,
-        )
-
-        return last_msg.text.value if last_msg else ""
-    finally:
-        # Cleanup thread
         try:
-            client.threads.delete(thread.id)
-        except Exception:
-            logger.warning("Failed to delete thread %s", thread.id)
+            agent_ref = {
+                "agent_reference": {"name": agent_name, "type": "agent_reference"},
+            }
+
+            # Get initial response
+            response = openai_client.responses.create(
+                conversation=conversation.id,
+                extra_body=agent_ref,
+            )
+
+            # Handle function calls in a loop
+            response = _handle_function_calls(
+                openai_client,
+                conversation.id,
+                agent_ref,
+                response,
+                tool_functions,
+            )
+
+            return response.output_text or ""
+        finally:
+            try:
+                openai_client.conversations.delete(conversation_id=conversation.id)
+            except Exception:
+                logger.warning("Failed to delete conversation %s", conversation.id)
 
 
-def _register_agent_tools(client, agent_name: str) -> None:
-    """Load and register an agent's tool functions for auto-execution."""
+def _handle_function_calls(openai_client, conversation_id, agent_ref, response, tool_functions):
+    """Process function_call items in the response until none remain."""
+    for _ in range(MAX_FUNCTION_CALL_ITERATIONS):
+        calls = [item for item in response.output if item.type == "function_call"]
+        if not calls:
+            return response
+
+        results = []
+        for call in calls:
+            func = tool_functions.get(call.name)
+            if func is None:
+                logger.error("Unknown tool function: %s", call.name)
+                results.append(
+                    {
+                        "type": "function_call_output",
+                        "call_id": call.call_id,
+                        "output": json.dumps({"error": f"Unknown function: {call.name}"}),
+                    }
+                )
+                continue
+
+            try:
+                arguments = json.loads(call.arguments) if call.arguments else {}
+                result = func(**arguments)
+                results.append(
+                    {
+                        "type": "function_call_output",
+                        "call_id": call.call_id,
+                        "output": json.dumps(result) if not isinstance(result, str) else result,
+                    }
+                )
+            except Exception as exc:
+                logger.exception("Tool %s raised an error", call.name)
+                results.append(
+                    {
+                        "type": "function_call_output",
+                        "call_id": call.call_id,
+                        "output": json.dumps({"error": str(exc)}),
+                    }
+                )
+
+        response = openai_client.responses.create(
+            conversation=conversation_id,
+            extra_body=agent_ref,
+            input=results,
+        )
+
+    raise AgentRunError(
+        f"Maximum iterations ({MAX_FUNCTION_CALL_ITERATIONS}) exceeded for function calls. "
+        "The agent may be stuck in a loop."
+    )
+
+
+def _load_tool_functions(agent_name: str) -> dict:
+    """Load tool functions from an agent's tools module.
+
+    Returns a dict mapping function name → callable.
+    """
     module_name = agent_name.replace("-", "_")
     try:
         tools_module = importlib.import_module(f"agents.{module_name}.tools")
     except ModuleNotFoundError:
-        return
-    if hasattr(tools_module, "TOOLS"):
-        for tool in tools_module.TOOLS:
-            client.enable_auto_function_calls(tool)
+        return {}
+    functions = {}
+    for tool in getattr(tools_module, "TOOLS", []):
+        func = getattr(tools_module, tool.name, None)
+        if func is None:
+            # Check sub-modules (e.g., sample_tool)
+            for attr_name in dir(tools_module):
+                sub = getattr(tools_module, attr_name)
+                if hasattr(sub, tool.name):
+                    func = getattr(sub, tool.name)
+                    break
+        if func and callable(func):
+            functions[tool.name] = func
+    return functions
