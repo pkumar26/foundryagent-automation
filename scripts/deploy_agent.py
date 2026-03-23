@@ -16,7 +16,7 @@ def main() -> int:
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
-        "--agent",
+        "--name",
         type=str,
         help="Deploy a single agent by name",
     )
@@ -32,7 +32,7 @@ def main() -> int:
     if args.deploy_all:
         return _deploy_all()
     else:
-        return _deploy_single(args.agent)
+        return _deploy_single(args.name)
 
 
 def _deploy_single(name: str) -> int:
