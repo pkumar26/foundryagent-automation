@@ -113,9 +113,9 @@ jobs:
           terraform apply -auto-approve -var-file=envs/${{ env.ENVIRONMENT }}.tfvars
 
       # Stage 2: Provision shared infrastructure (Bicep)
-      - name: Resolve Bicep region
+      - name: Resolve Bicep parameters
         if: env.INFRA_TOOL == 'bicep'
-        id: bicep-region
+        id: bicep-params
         run: |
           PARAM_FILE="infra/bicep/parameters/${{ env.ENVIRONMENT }}.bicepparam"
           if [ ! -f "$PARAM_FILE" ]; then
@@ -127,15 +127,21 @@ jobs:
             echo "::error::Could not extract location from $PARAM_FILE"
             exit 1
           fi
+          PREFIX=$(grep -oP "param prefix = '\K[^']+" "$PARAM_FILE")
+          if [ -z "$PREFIX" ]; then
+            echo "::error::Could not extract prefix from $PARAM_FILE"
+            exit 1
+          fi
           echo "region=${REGION}" >> "$GITHUB_OUTPUT"
+          echo "resourceGroup=${PREFIX}-rg-${{ env.ENVIRONMENT }}" >> "$GITHUB_OUTPUT"
 
       - name: Provision shared infra (Bicep)
         if: env.INFRA_TOOL == 'bicep'
         id: deploy-bicep
         uses: azure/arm-deploy@v2
         with:
-          scope: subscription
-          region: ${{ steps.bicep-region.outputs.region }}
+          scope: resourcegroup
+          resourceGroupName: ${{ steps.bicep-params.outputs.resourceGroup }}
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/${{ env.ENVIRONMENT }}.bicepparam
 

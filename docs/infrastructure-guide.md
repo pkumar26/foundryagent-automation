@@ -212,7 +212,7 @@ All Bicep files are in `infra/bicep/`.
 
 ### 1. Deploy with Azure CLI
 
-Bicep deployments are triggered via `az deployment sub create` (subscription-scoped, since the template creates a resource group).
+Bicep deployments are triggered via `az deployment group create` (resource-group-scoped). The resource group must already exist.
 
 ### 2. Configure Parameters
 
@@ -512,9 +512,9 @@ az storage container show --name tfstate --account-name <storage-account-name>
 
 Key Vault names are globally unique. If you get a conflict, change the `prefix` to something unique.
 
-### Bicep deployment fails with "subscription scope" error
+### Bicep deployment fails with authorization error
 
-Ensure you're using `az deployment sub create` (subscription scope), not `az deployment group create` (resource group scope). The template creates its own resource group.
+The Bicep template deploys at resource group scope. Ensure the resource group exists and your service principal has Contributor access at the resource group level. Use `az deployment group create` with `--resource-group <name>`.
 
 ### Terraform state lock errors
 

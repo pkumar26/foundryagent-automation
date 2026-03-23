@@ -1,5 +1,3 @@
-targetScope = 'subscription'
-
 @description('Naming prefix for all resources')
 param prefix string
 
@@ -19,16 +17,9 @@ param enableKnowledgeSource bool = false
 @description('Object ID of the CI/CD identity for RBAC assignments')
 param ciPrincipalId string = ''
 
-// Resource Group
-resource rg 'Microsoft.Resources/resourceGroups@2023-07-01' = {
-  name: '${prefix}-rg-${environment}'
-  location: location
-}
-
 // Key Vault
 module keyVault 'modules/keyvault.bicep' = {
   name: 'deploy-keyvault'
-  scope: rg
   params: {
     name: '${prefix}-kv-${environment}'
     location: location
@@ -39,7 +30,6 @@ module keyVault 'modules/keyvault.bicep' = {
 // Foundry Resource (conditional)
 module foundryResource 'modules/foundry-resource.bicep' = if (!useExistingFoundry) {
   name: 'deploy-foundry-resource'
-  scope: rg
   params: {
     name: '${prefix}-foundry-${environment}'
     location: location
@@ -50,21 +40,17 @@ module foundryResource 'modules/foundry-resource.bicep' = if (!useExistingFoundr
 // Foundry Project (conditional)
 module foundryProject 'modules/foundry-project.bicep' = if (!useExistingFoundry) {
   name: 'deploy-foundry-project'
-  scope: rg
   params: {
     name: '${prefix}-project-${environment}'
     location: location
-    foundryAccountId: useExistingFoundry ? '' : foundryResource.outputs.accountId
+    #disable-next-line BCP318
+    foundryAccountId: foundryResource.outputs.accountId
   }
-  dependsOn: [
-    foundryResource
-  ]
 }
 
 // AI Search (conditional)
 module aiSearch 'modules/ai-search.bicep' = if (enableKnowledgeSource) {
   name: 'deploy-ai-search'
-  scope: rg
   params: {
     name: '${prefix}-search-${environment}'
     location: location
@@ -74,16 +60,14 @@ module aiSearch 'modules/ai-search.bicep' = if (enableKnowledgeSource) {
 // RBAC Role Assignments
 module rbacContributor 'modules/rbac-contributor.bicep' = if (ciPrincipalId != '') {
   name: 'deploy-rbac-contributor'
-  scope: rg
   params: {
     principalId: ciPrincipalId
-    resourceGroupId: rg.id
+    resourceGroupId: resourceGroup().id
   }
 }
 
 module rbacKvUser 'modules/rbac-kv-user.bicep' = if (ciPrincipalId != '') {
   name: 'deploy-rbac-kv-user'
-  scope: rg
   params: {
     principalId: ciPrincipalId
     keyVaultName: keyVault.outputs.keyVaultName
@@ -92,18 +76,14 @@ module rbacKvUser 'modules/rbac-kv-user.bicep' = if (ciPrincipalId != '') {
 
 module rbacCognitiveUser 'modules/rbac-cognitive-user.bicep' = if (!useExistingFoundry && ciPrincipalId != '') {
   name: 'deploy-rbac-cognitive-user'
-  scope: rg
   params: {
     principalId: ciPrincipalId
     foundryAccountName: '${prefix}-foundry-${environment}'
   }
-  dependsOn: [
-    foundryResource
-  ]
 }
 
 // Outputs
-output resourceGroupName string = rg.name
 output keyVaultName string = keyVault.outputs.keyVaultName
 // Note: camelCase to match Bicep conventions. Deploy workflow maps this to AZURE_AI_PROJECT_ENDPOINT.
-output projectEndpoint string = useExistingFoundry ? '' : foundryResource.outputs.endpoint
+#disable-next-line BCP318
+output projectEndpoint string = !useExistingFoundry ? foundryResource.outputs.endpoint : ''
