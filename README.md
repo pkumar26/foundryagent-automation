@@ -208,7 +208,7 @@ print(response)
 |-------|----------|-------------|
 | `agent_name` | yes | Kebab-case name for the new agent (e.g. `my-agent`) |
 
-Authentication uses OIDC (Workload Identity Federation) — no client secrets.
+Authentication uses OIDC (Workload Identity Federation) — no client secrets. When using an existing Foundry project, the CI/CD service principal also needs the **Azure AI Developer** role on the Foundry resource — see the [Infrastructure Guide](docs/infrastructure-guide.md#rbac-roles) for setup instructions.
 
 ## Integrations
 
