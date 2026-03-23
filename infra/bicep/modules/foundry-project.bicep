@@ -11,6 +11,7 @@ resource existing_account 'Microsoft.CognitiveServices/accounts@2024-10-01' exis
   name: last(split(foundryAccountId, '/'))
 }
 
+#disable-next-line BCP081
 resource foundryProject 'Microsoft.CognitiveServices/accounts/projects@2024-10-01' = {
   name: name
   location: location
