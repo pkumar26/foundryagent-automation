@@ -36,8 +36,8 @@ variable "ci_principal_id" {
   default     = ""
 }
 
-variable "existing_foundry_connection_string" {
-  description = "Foundry project connection string when using an existing project"
+variable "existing_foundry_endpoint" {
+  description = "Foundry project endpoint URL when using an existing project"
   type        = string
   default     = ""
   sensitive   = true
