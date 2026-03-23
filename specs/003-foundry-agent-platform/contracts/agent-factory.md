@@ -63,7 +63,7 @@ Running `create_or_update_agent(config)` N times with the same config produces t
 
 ## Dependencies
 
-- `agents._base.client.get_client()` — singleton AIProjectClient
+- `agents._base.client.get_agents_client()` — singleton AIProjectClient.agents sub-client
 - `agents.<name>.integrations.knowledge.get_knowledge_tool(config)` — optional tool
 - `agents.<name>.integrations.github_openapi.get_github_openapi_tool(config)` — optional tool
 - Agent's `tools/` module — FunctionTool definitions

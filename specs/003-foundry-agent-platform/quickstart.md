@@ -23,8 +23,8 @@ python -m venv .venv
 source .venv/bin/activate   # Linux/macOS
 # .venv\Scripts\activate    # Windows
 
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+uv sync
+uv sync --group dev
 ```
 
 ## 2. Configure Environment
@@ -45,7 +45,7 @@ AZURE_KEY_VAULT_NAME=<your-keyvault-name>  # optional
 ## 3. Deploy Your First Agent
 
 ```bash
-python scripts/deploy_agent.py --agent <agent-name-1>
+python scripts/deploy_agent.py --name <agent-name-1>
 ```
 
 The script will:
@@ -59,13 +59,14 @@ The script will:
 Open a Python shell or use the notebook `notebooks/02_build_and_run_agent.ipynb`:
 
 ```python
-from azure.ai.agents import AgentsClient
+from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 
-client = AgentsClient(
-    endpoint="<your-connection-string>",
+project_client = AIProjectClient.from_connection_string(
+    conn_str="<your-connection-string>",
     credential=DefaultAzureCredential()
 )
+client = project_client.agents
 
 # Create thread, send message, run agent
 thread = client.threads.create()
@@ -114,7 +115,7 @@ See the [Scaffolding Guide](../../docs/scaffolding-guide.md) for YAML input, cus
 1. Create folder: `agents/<new-agent>/`
 2. Add files: `__init__.py`, `config.py`, `instructions.md`, `tools/`, `integrations/`
 3. Register in `agents/registry.py`
-4. Deploy: `python scripts/deploy_agent.py --agent <new-agent>`
+4. Deploy: `python scripts/deploy_agent.py --name <new-agent>`
 
 See [spec.md](spec.md) for full details on each file's responsibility.
 

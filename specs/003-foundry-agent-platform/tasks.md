@@ -43,7 +43,7 @@
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
 - [X] T005 [P] Implement FoundryBaseConfig using pydantic-settings BaseSettings with fields (foundry_project_connection_string, environment, azure_key_vault_name) and .env file support in agents/_base/config.py
-- [X] T006 [P] Implement singleton AIProjectClient initialisation using DefaultAzureCredential and connection string from config in agents/_base/client.py
+- [X] T006 [P] Implement singleton AIProjectClient initialisation using DefaultAzureCredential and connection string (via `from_connection_string`) from config in agents/_base/client.py, exposing `get_client()` for the project client and `get_agents_client()` for the agents sub-client
 - [X] T007 Implement AgentRegistryEntry dataclass and AgentRegistry class with list_agents(), get_agent(name), validate() per registry contract in agents/registry.py
 - [X] T008 Implement create_or_update_agent() with idempotent create-or-update pattern (list agents → find by name → create or update), instructions file loading, tool collection, and conditional integration tool appending per factory contract in agents/_base/agent_factory.py
 - [X] T009 [P] Create shared tool utilities module with FunctionTool helper in agents/_base/tools/__init__.py
@@ -56,7 +56,7 @@
 
 **Goal**: A developer clones the repo, sets a connection string, deploys one agent, and verifies it responds to a test prompt
 
-**Independent Test**: Clone repo → set FOUNDRY_PROJECT_CONNECTION_STRING → run `python scripts/deploy_agent.py --agent <agent-1>` → send a prompt → verify response
+**Independent Test**: Clone repo → set FOUNDRY_PROJECT_CONNECTION_STRING → run `python scripts/deploy_agent.py --name <agent-1>` → send a prompt → verify response
 
 ### Implementation for User Story 1
 
@@ -66,7 +66,7 @@
 - [X] T013 [P] [US1] Create knowledge source integration stub returning None when KNOWLEDGE_SOURCE_ENABLED is false with get_knowledge_tool(config) signature in agents/<agent-1>/integrations/knowledge.py
 - [X] T014 [P] [US1] Create GitHub OpenAPI integration stub returning None when GITHUB_OPENAPI_ENABLED is false with get_github_openapi_tool(config) signature in agents/<agent-1>/integrations/github_openapi.py
 - [X] T015 [US1] Register first agent as AgentRegistryEntry in REGISTRY within agents/registry.py
-- [X] T016 [US1] Implement deploy CLI script with argparse (--agent <name>, --all, mutually exclusive), registry resolution, per-agent error isolation, and summary output per deploy-script contract in scripts/deploy_agent.py
+- [X] T016 [US1] Implement deploy CLI script with argparse (--name <name>, --all, mutually exclusive), registry resolution, per-agent error isolation, and summary output per deploy-script contract in scripts/deploy_agent.py
 - [X] T017 [US1] Implement run lifecycle helper with create_thread, send_message, create_and_process_run, retrieve_response, and failure/cancellation handling with configurable timeout (default 120s) in agents/_base/run.py
 
 **Checkpoint**: At this point, a developer can deploy one agent and interact with it via the run helper. User Story 1 is fully functional and testable independently.
@@ -77,7 +77,7 @@
 
 **Goal**: Prove the multi-agent extensibility pattern — add a second agent without modifying any existing agent or shared code
 
-**Independent Test**: Create new agent folder → register it → run `deploy_agent.py --agent <agent-2>` → verify it responds independently. Run `deploy_agent.py --all` → verify both deploy and one failing doesn't block the other.
+**Independent Test**: Create new agent folder → register it → run `deploy_agent.py --name <agent-2>` → verify it responds independently. Run `deploy_agent.py --all` → verify both deploy and one failing doesn't block the other.
 
 ### Implementation for User Story 2
 
@@ -114,7 +114,7 @@
 
 ### Implementation for User Story 4
 
-- [X] T025 [P] [US4] Create setup-and-connect notebook with configurable AGENT_NAME variable, Mode A (existing Foundry) and Mode B (new Foundry) sections, AIProjectClient initialisation, and connection verification in notebooks/01_setup_and_connect.ipynb
+- [X] T025 [P] [US4] Create setup-and-connect notebook with configurable AGENT_NAME variable, Mode A (existing Foundry) and Mode B (new Foundry) sections, AIProjectClient initialisation (via `from_connection_string`), and connection verification in notebooks/01_setup_and_connect.ipynb
 - [X] T026 [P] [US4] Create build-and-run-agent notebook with agent creation, thread creation, message posting, run execution, response display, and function tool demonstration — agent-agnostic via top-level AGENT_NAME variable — in notebooks/02_build_and_run_agent.ipynb
 
 **Checkpoint**: At this point, onboarding notebooks are complete. A new developer can connect to Foundry and build an agent interactively (SC-006).
@@ -158,7 +158,7 @@
 
 - [X] T038 [P] [US6] Create root conftest with shared fixtures (mock_config, mock_client, mock_agents_client) and pytest markers registration (integration, agent_1, agent_2) in tests/conftest.py
 - [X] T039 [P] [US6] Create unit tests for FoundryBaseConfig (env var loading, defaults, validation) with mocked env vars in tests/_base/test_config.py
-- [X] T040 [P] [US6] Create unit tests for AIProjectClient singleton init (credential handling, connection string) with mocked SDK in tests/_base/test_client.py
+- [X] T040 [P] [US6] Create unit tests for AIProjectClient singleton init (credential handling, connection string, agents sub-client) with mocked SDK in tests/_base/test_client.py
 - [X] T041 [P] [US6] Create unit tests for create_or_update_agent (create path, update path, missing instructions, empty instructions, conditional tool appending, edge cases: invalid connection string error, empty registry warning, concurrent deploy idempotency) with mocked agents_client in tests/_base/test_agent_factory.py
 - [X] T042 [P] [US6] Create agent-1 conftest with agent-specific fixtures and @pytest.mark.agent_1 marker in tests/<agent-1>/conftest.py
 - [X] T043 [P] [US6] Create unit tests for agent-1 tools (function input/output, edge cases) in tests/<agent-1>/test_tools.py

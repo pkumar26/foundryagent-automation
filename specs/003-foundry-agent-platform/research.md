@@ -8,7 +8,7 @@
 
 ## 1. azure-ai-projects SDK — Agent Lifecycle Patterns
 
-**Decision**: Use `AIProjectClient` from `azure.ai.projects` with `agents` sub-client for all agent operations. Use `create_and_process_run()` for built-in polling with automatic tool-call handling.
+**Decision**: Use `AIProjectClient` from `azure.ai.projects` with `.agents` sub-client for all agent operations. The `AIProjectClient.from_connection_string()` factory method is the primary entry point. Use `create_and_process_run()` for built-in polling with automatic tool-call handling.
 
 **Rationale**: The SDK provides a high-level client that handles polling, tool-call dispatch, and terminal-state detection internally. This eliminates custom polling logic for the common case while still allowing manual fallback via `runs.create()` + `runs.get()` loop for edge cases.
 
@@ -25,11 +25,11 @@ from azure.ai.agents.models import FunctionTool, ListSortOrder
 from azure.identity import DefaultAzureCredential
 
 # Client initialisation (singleton)
-client = AIProjectClient.from_connection_string(
+project_client = AIProjectClient.from_connection_string(
     conn_str=connection_string,
     credential=DefaultAzureCredential()
 )
-agents_client = client.agents
+agents_client = project_client.agents
 
 # Create agent
 agent = agents_client.create_agent(

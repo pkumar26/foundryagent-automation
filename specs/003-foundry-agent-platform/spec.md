@@ -23,11 +23,11 @@ A developer with an existing Azure AI Foundry project wants to deploy their firs
 
 **Why this priority**: This is the minimum viable path — a developer must be able to deploy and interact with at least one agent before any other capability matters. It validates the core agent lifecycle (create, run, respond) and the "use existing Foundry" mode that most early adopters will follow.
 
-**Independent Test**: Can be fully tested by cloning the repo, configuring a connection string, running `python scripts/deploy_agent.py --agent <name>`, sending a prompt, and verifying a response. Delivers a working, conversational agent.
+**Independent Test**: Can be fully tested by cloning the repo, configuring a connection string, running `python scripts/deploy_agent.py --name <name>`, sending a prompt, and verifying a response. Delivers a working, conversational agent.
 
 **Acceptance Scenarios**:
 
-1. **Given** a developer has a valid Foundry project connection string, **When** they set `FOUNDRY_PROJECT_CONNECTION_STRING` and run `deploy_agent.py --agent agent-name-1`, **Then** the agent is created (or updated idempotently) in the Foundry project and the script exits successfully.
+1. **Given** a developer has a valid Foundry project connection string, **When** they set `FOUNDRY_PROJECT_CONNECTION_STRING` and run `deploy_agent.py --name agent-name-1`, **Then** the agent is created (or updated idempotently) in the Foundry project and the script exits successfully.
 2. **Given** a deployed agent exists, **When** the developer creates a thread, posts a message, and starts a run, **Then** the run completes with status "completed" and a non-empty response is returned.
 3. **Given** the deploy script is run a second time for the same agent with updated instructions, **When** it completes, **Then** the existing agent is updated (not duplicated) and reflects the new instructions.
 
@@ -39,13 +39,13 @@ A developer wants to add a second agent to the platform. They create a new folde
 
 **Why this priority**: Multi-agent extensibility is the primary architectural differentiator. Proving that a new agent can be added and deployed in isolation validates the self-contained agent pattern and the registry design.
 
-**Independent Test**: Can be fully tested by adding a new agent folder, registering it, running `deploy_agent.py --agent <new-agent>`, and verifying it responds independently. No changes to existing agents required.
+**Independent Test**: Can be fully tested by adding a new agent folder, registering it, running `deploy_agent.py --name <new-agent>`, and verifying it responds independently. No changes to existing agents required.
 
 **Acceptance Scenarios**:
 
-1. **Given** the developer creates a new folder `agents/<new-agent>/` with config, instructions, and tools, **When** they register it in `registry.py` and run `deploy_agent.py --agent <new-agent>`, **Then** the new agent is created in the Foundry project.
+1. **Given** the developer creates a new folder `agents/<new-agent>/` with config, instructions, and tools, **When** they register it in `registry.py` and run `deploy_agent.py --name <new-agent>`, **Then** the new agent is created in the Foundry project.
 2. **Given** two agents are registered, **When** the developer runs `deploy_agent.py --all`, **Then** both agents are deployed, and one failing does not block the other.
-3. **Given** a developer requests deployment of a non-existent agent name, **When** they run `deploy_agent.py --agent unknown`, **Then** the script fails fast with a clear error message.
+3. **Given** a developer requests deployment of a non-existent agent name, **When** they run `deploy_agent.py --name unknown`, **Then** the script fails fast with a clear error message.
 
 ---
 
@@ -178,7 +178,7 @@ A developer wants to run unit tests locally without Azure credentials, and integ
 
 #### Deploy Script
 
-- **FR-029**: The deploy script MUST accept `--agent <name>` to deploy a single agent or `--all` to deploy every registered agent, iterating through the registry.
+- **FR-029**: The deploy script MUST accept `--name <name>` to deploy a single agent or `--all` to deploy every registered agent, iterating through the registry.
 - **FR-030**: The deploy script MUST log success or failure per agent, and one agent's failure MUST NOT prevent others from deploying.
 
 ### Key Entities

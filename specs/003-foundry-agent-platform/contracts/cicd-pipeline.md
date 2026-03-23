@@ -77,7 +77,7 @@ permissions:
 | 2 | Provision Shared Infra | Always | Key Vault + AI Search (if enabled) via selected infra_tool |
 | 3 | Provision Foundry | `use_existing_foundry == 'false'` | Create Foundry resource + project via selected infra_tool |
 | 4 | Export Outputs | Always | Connection string from infra outputs OR GitHub secret |
-| 5 | Deploy Agents | Always | `python scripts/deploy_agent.py --agent <name>` or `--all` |
+| 5 | Deploy Agents | Always | `python scripts/deploy_agent.py --name <name>` or `--all` |
 | 6 | Integration Tests | Always | `pytest tests/ -m integration` (or per-agent marker) |
 
 ### Authentication

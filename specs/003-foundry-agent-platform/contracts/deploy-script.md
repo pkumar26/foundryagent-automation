@@ -13,10 +13,10 @@ CLI entry point for deploying one or all registered agents. Iterates the agent r
 ## Interface
 
 ```
-Usage: python scripts/deploy_agent.py [--agent <name> | --all]
+Usage: python scripts/deploy_agent.py [--name <name> | --all]
 
 Options:
-  --agent <name>    Deploy a single agent by name (must exist in registry)
+  --name <name>     Deploy a single agent by name (must exist in registry)
   --all             Deploy all registered agents
   -h, --help        Show help and exit
 ```
@@ -25,12 +25,12 @@ Options:
 
 | Input | Action | Exit Code |
 |-------|--------|-----------|
-| `--agent <name>` (exists) | Deploy single agent | 0 on success, 1 on failure |
-| `--agent <name>` (not in registry) | Print error with available names, exit | 1 |
+| `--name <name>` (exists) | Deploy single agent | 0 on success, 1 on failure |
+| `--name <name>` (not in registry) | Print error with available names, exit | 1 |
 | `--all` (registry non-empty) | Deploy each agent; continue on individual failure | 0 if all succeed, 1 if any fail |
 | `--all` (registry empty) | Print warning: "No agents registered" | 1 |
 | No arguments | Print usage and exit | 1 |
-| `--agent` + `--all` | Print error: mutually exclusive | 1 |
+| `--name` + `--all` | Print error: mutually exclusive | 1 |
 
 ## Output Contract
 

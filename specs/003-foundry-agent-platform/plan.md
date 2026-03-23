@@ -10,7 +10,7 @@ Build a production-grade, multi-agent platform using the Azure AI Foundry Agent 
 ## Technical Context
 
 **Language/Version**: Python 3.11+
-**Primary Dependencies**: azure-ai-projects (AIProjectClient, AgentsClient, FunctionTool, ThreadMessage, Run, RunStatus), azure-identity (DefaultAzureCredential), pydantic-settings
+**Primary Dependencies**: azure-ai-projects (AIProjectClient), azure-ai-agents (FunctionTool, ThreadMessage, Run, RunStatus), azure-identity (DefaultAzureCredential), pydantic-settings
 **Storage**: N/A (stateless agents — Azure AI Foundry manages agent/thread state server-side)
 **Testing**: pytest, pytest-asyncio; Black, isort, flake8 for code quality
 **Target Platform**: Azure AI Foundry Agent Service (serverless — no containers, no AKS)
@@ -94,7 +94,7 @@ agents/
 ├── _base/
 │   ├── __init__.py
 │   ├── agent_factory.py        # Shared create_or_update_agent() logic
-│   ├── client.py               # Singleton AIProjectClient initialisation
+│   ├── client.py               # Singleton AIProjectClient initialisation (with .agents sub-client)
 │   ├── config.py               # Base pydantic-settings config
 │   ├── run.py                  # Thread-and-run lifecycle helper
 │   └── tools/
@@ -154,7 +154,7 @@ notebooks/
 └── 02_build_and_run_agent.ipynb
 
 scripts/
-└── deploy_agent.py             # CLI: --agent <name> or --all
+└── deploy_agent.py             # CLI: --name <name> or --all
 
 .github/
 └── workflows/

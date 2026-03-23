@@ -53,7 +53,7 @@ Plus: a new entry in `agents/registry.py`.
 1. **Edit instructions**: Open `agents/my_agent/instructions.md` and write your agent's system prompt
 2. **Add tools**: Replace or extend `agents/my_agent/tools/sample_tool.py` with your custom tools
 3. **Run tests**: `pytest tests/my_agent/ -v`
-4. **Deploy**: `python scripts/deploy_agent.py --agent my-agent`
+4. **Deploy**: `python scripts/deploy_agent.py --name my-agent`
 
 ## Create via GitHub Actions
 
