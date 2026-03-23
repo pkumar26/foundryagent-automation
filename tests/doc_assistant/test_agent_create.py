@@ -34,6 +34,16 @@ def project_client():
     )
 
 
+@pytest.fixture(autouse=True)
+def cleanup_agent(project_client, test_agent_name):
+    """Delete the test agent after each test."""
+    yield
+    try:
+        project_client.agents.delete_agent(agent_name=test_agent_name)
+    except Exception:
+        pass
+
+
 class TestAgentCreateIntegration:
     """Integration tests for agent creation against live Foundry."""
 

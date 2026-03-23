@@ -36,7 +36,7 @@ def project_client():
 
 @pytest.fixture
 def test_agent(project_client, test_agent_name):
-    """Create a test agent version and return it."""
+    """Create a test agent version and return it; delete after test."""
     from azure.ai.projects.models import PromptAgentDefinition
 
     definition = PromptAgentDefinition(
@@ -48,6 +48,10 @@ def test_agent(project_client, test_agent_name):
         definition=definition,
     )
     yield agent
+    try:
+        project_client.agents.delete_agent(agent_name=test_agent_name)
+    except Exception:
+        pass
 
 
 class TestAgentRunIntegration:
