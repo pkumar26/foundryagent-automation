@@ -6,7 +6,7 @@ param prefix string
 param environment string
 
 @description('Azure region for all resources')
-param location string = 'eastus'
+param location string = 'eastus2'
 
 @description('Whether to use an existing Foundry project')
 param useExistingFoundry bool = true
