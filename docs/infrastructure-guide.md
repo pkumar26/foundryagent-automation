@@ -418,16 +418,21 @@ The `deploy.yml` GitHub Actions workflow automates infrastructure provisioning a
 
 ### Authentication
 
-The workflow uses **OIDC with Workload Identity Federation** — no client secrets required. Set up these GitHub secrets:
+The workflow uses **OIDC with Workload Identity Federation** — no client secrets required. Set up these GitHub **secrets**:
 
 | Secret | Description |
 |--------|-------------|
 | `AZURE_CLIENT_ID` | App registration Client ID |
 | `AZURE_TENANT_ID` | Azure AD Tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | Target subscription ID |
-| `AZURE_AI_PROJECT_ENDPOINT` | **Required when `use_existing_foundry = true`**. Your Azure AI Foundry project endpoint URL |
 
-For Terraform remote state, also set:
+And these GitHub **variables** (Settings → Secrets and variables → Actions → Variables):
+
+| Variable | Description |
+|----------|-------------|
+| `AZURE_AI_PROJECT_ENDPOINT` | **Required when `use_existing_foundry = true`**. Your Azure AI Foundry project endpoint URL (not a secret — can be set at repo or org level) |
+
+For Terraform remote state, also set these **secrets**:
 
 | Secret | Description |
 |--------|-------------|

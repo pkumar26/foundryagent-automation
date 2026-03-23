@@ -148,9 +148,9 @@ jobs:
       # Stage 3: Foundry provisioning handled within main.tf/main.bicep via use_existing_foundry flag
 
       # Stage 4: Export outputs
-      - name: Set endpoint from secret (existing Foundry)
+      - name: Set endpoint from variable (existing Foundry)
         if: env.USE_EXISTING_FOUNDRY == 'true'
-        run: echo "AZURE_AI_PROJECT_ENDPOINT=${{ secrets.AZURE_AI_PROJECT_ENDPOINT }}" >> $GITHUB_ENV
+        run: echo "AZURE_AI_PROJECT_ENDPOINT=${{ vars.AZURE_AI_PROJECT_ENDPOINT }}" >> $GITHUB_ENV
 
       - name: Set endpoint from Terraform output (new Foundry)
         if: env.USE_EXISTING_FOUNDRY == 'false' && env.INFRA_TOOL == 'terraform'
