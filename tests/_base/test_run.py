@@ -18,101 +18,149 @@ def _reset_singleton():
 
 
 @pytest.fixture
-def mock_client():
-    """Provide a fully mocked AgentsClient."""
-    with patch("agents._base.run.get_client") as mock_get:
-        client = MagicMock()
-        mock_get.return_value = client
+def mock_openai_client():
+    """Provide a fully mocked OpenAI client (conversations + responses)."""
+    openai_client = MagicMock()
 
-        # Default: thread creation
-        thread = MagicMock()
-        thread.id = "thread-1"
-        client.threads.create.return_value = thread
+    # Default: conversation creation
+    conversation = MagicMock()
+    conversation.id = "conv-1"
+    openai_client.conversations.create.return_value = conversation
 
-        # Default: successful run
-        run = MagicMock()
-        run.status = "completed"
-        client.runs.create_and_process.return_value = run
+    # Default: successful response with text output only
+    response = MagicMock()
+    response.output_text = "Hello from agent"
+    text_item = MagicMock()
+    text_item.type = "message"
+    response.output = [text_item]
+    openai_client.responses.create.return_value = response
 
-        # Default: response message
-        msg = MagicMock()
-        msg.text.value = "Hello from agent"
-        client.messages.get_last_message_text_by_role.return_value = msg
+    return openai_client
 
-        yield client
+
+@pytest.fixture
+def mock_project_client(mock_openai_client):
+    """Provide a mocked AIProjectClient with OpenAI client context manager."""
+    with patch("agents._base.run.get_project_client") as mock_get:
+        project_client = MagicMock()
+        mock_get.return_value = project_client
+
+        # get_openai_client() returns context manager yielding the openai client
+        project_client.get_openai_client.return_value.__enter__ = MagicMock(
+            return_value=mock_openai_client
+        )
+        project_client.get_openai_client.return_value.__exit__ = MagicMock(return_value=False)
+
+        yield project_client
 
 
 class TestRunAgent:
     """Tests for the run_agent function."""
 
-    def test_success_returns_response(self, mock_client):
+    def test_success_returns_response(self, mock_project_client, mock_openai_client):
         """Should return the agent's response text on successful run."""
-        result = run_agent("conn-str", "agent-1", "Hello")
+        result = run_agent("https://endpoint", "test-agent", "Hello")
 
         assert result == "Hello from agent"
-        mock_client.threads.create.assert_called_once()
-        mock_client.messages.create.assert_called_once()
-        mock_client.runs.create_and_process.assert_called_once()
-        mock_client.threads.delete.assert_called_once_with("thread-1")
+        mock_openai_client.conversations.create.assert_called_once()
+        mock_openai_client.responses.create.assert_called_once()
+        mock_openai_client.conversations.delete.assert_called_once_with(conversation_id="conv-1")
 
-    def test_failed_run_raises_agent_run_error(self, mock_client):
-        """Should raise AgentRunError when run status is 'failed'."""
-        run = MagicMock()
-        run.status = "failed"
-        run.last_error = "Model overloaded"
-        mock_client.runs.create_and_process.return_value = run
+    def test_cleans_up_conversation_on_failure(self, mock_project_client, mock_openai_client):
+        """Should delete the conversation even when an error occurs."""
+        mock_openai_client.responses.create.side_effect = RuntimeError("API error")
 
-        with pytest.raises(AgentRunError, match="Agent run failed"):
-            run_agent("conn-str", "agent-1", "Hello")
+        with pytest.raises(RuntimeError, match="API error"):
+            run_agent("https://endpoint", "test-agent", "Hello")
 
-    def test_cancelled_run_raises_agent_run_error(self, mock_client):
-        """Should raise AgentRunError when run status is 'cancelled'."""
-        run = MagicMock()
-        run.status = "cancelled"
-        mock_client.runs.create_and_process.return_value = run
+        mock_openai_client.conversations.delete.assert_called_once_with(conversation_id="conv-1")
 
-        with pytest.raises(AgentRunError, match="cancelled"):
-            run_agent("conn-str", "agent-1", "Hello")
+    def test_no_output_text_returns_empty_string(self, mock_project_client, mock_openai_client):
+        """Should return empty string when output_text is None."""
+        response = MagicMock()
+        response.output_text = None
+        response.output = []
+        mock_openai_client.responses.create.return_value = response
 
-    def test_unexpected_status_raises_agent_run_error(self, mock_client):
-        """Should raise AgentRunError for unexpected terminal status."""
-        run = MagicMock()
-        run.status = "expired"
-        mock_client.runs.create_and_process.return_value = run
-
-        with pytest.raises(AgentRunError, match="unexpected status"):
-            run_agent("conn-str", "agent-1", "Hello")
-
-    def test_cleans_up_thread_on_failure(self, mock_client):
-        """Should delete the thread even when the run fails."""
-        run = MagicMock()
-        run.status = "failed"
-        run.last_error = "Error"
-        mock_client.runs.create_and_process.return_value = run
-
-        with pytest.raises(AgentRunError):
-            run_agent("conn-str", "agent-1", "Hello")
-
-        mock_client.threads.delete.assert_called_once_with("thread-1")
-
-    def test_no_response_returns_empty_string(self, mock_client):
-        """Should return empty string when no agent message is found."""
-        mock_client.messages.get_last_message_text_by_role.return_value = None
-
-        result = run_agent("conn-str", "agent-1", "Hello")
+        result = run_agent("https://endpoint", "test-agent", "Hello")
 
         assert result == ""
 
-    @patch("agents._base.run._register_agent_tools")
-    def test_registers_tools_when_agent_name_provided(self, mock_register, mock_client):
-        """Should register tools when agent_name is provided."""
-        run_agent("conn-str", "agent-1", "Hello", agent_name="code-helper")
+    @patch("agents._base.run._load_tool_functions")
+    def test_handles_function_calls(self, mock_load_tools, mock_project_client, mock_openai_client):
+        """Should execute function calls and submit results."""
+        mock_load_tools.return_value = {"greet_user": lambda name: f"Hi {name}!"}
 
-        mock_register.assert_called_once_with(mock_client, "code-helper")
+        # First response has a function_call
+        func_call = MagicMock()
+        func_call.type = "function_call"
+        func_call.name = "greet_user"
+        func_call.arguments = '{"name": "Alice"}'
+        func_call.call_id = "call-1"
 
-    @patch("agents._base.run._register_agent_tools")
-    def test_skips_tool_registration_when_no_agent_name(self, mock_register, mock_client):
-        """Should not register tools when agent_name is None."""
-        run_agent("conn-str", "agent-1", "Hello")
+        response1 = MagicMock()
+        response1.output = [func_call]
 
-        mock_register.assert_not_called()
+        # Second response has text
+        text_item = MagicMock()
+        text_item.type = "message"
+        response2 = MagicMock()
+        response2.output = [text_item]
+        response2.output_text = "Greeted Alice"
+
+        mock_openai_client.responses.create.side_effect = [response1, response2]
+
+        result = run_agent("https://endpoint", "test-agent", "Hello")
+
+        assert result == "Greeted Alice"
+        assert mock_openai_client.responses.create.call_count == 2
+
+    @patch("agents._base.run._load_tool_functions")
+    def test_handles_unknown_function(
+        self, mock_load_tools, mock_project_client, mock_openai_client
+    ):
+        """Should return error output for unknown function calls."""
+        mock_load_tools.return_value = {}
+
+        func_call = MagicMock()
+        func_call.type = "function_call"
+        func_call.name = "unknown_func"
+        func_call.arguments = "{}"
+        func_call.call_id = "call-1"
+
+        response1 = MagicMock()
+        response1.output = [func_call]
+
+        text_item = MagicMock()
+        text_item.type = "message"
+        response2 = MagicMock()
+        response2.output = [text_item]
+        response2.output_text = "Function not found"
+
+        mock_openai_client.responses.create.side_effect = [response1, response2]
+
+        run_agent("https://endpoint", "test-agent", "Hello")
+
+        # Assert the function_call_output was submitted
+        second_call = mock_openai_client.responses.create.call_args_list[1]
+        assert second_call.kwargs["input"][0]["type"] == "function_call_output"
+
+    @patch("agents._base.run._load_tool_functions")
+    def test_raises_on_max_iterations(
+        self, mock_load_tools, mock_project_client, mock_openai_client
+    ):
+        """Should raise AgentRunError when function call loop exceeds max iterations."""
+        mock_load_tools.return_value = {"loop_func": lambda: "result"}
+
+        func_call = MagicMock()
+        func_call.type = "function_call"
+        func_call.name = "loop_func"
+        func_call.arguments = "{}"
+        func_call.call_id = "call-loop"
+
+        looping_response = MagicMock()
+        looping_response.output = [func_call]
+        mock_openai_client.responses.create.return_value = looping_response
+
+        with pytest.raises(AgentRunError, match="Maximum iterations"):
+            run_agent("https://endpoint", "test-agent", "Hello")

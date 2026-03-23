@@ -9,7 +9,7 @@ import pytest
 def mock_config():
     """Create a mock FoundryBaseConfig-like object for testing."""
     config = MagicMock()
-    config.foundry_project_connection_string = "test-connection-string"
+    config.azure_ai_project_endpoint = "https://test-endpoint.services.ai.azure.com"
     config.environment = "dev"
     config.azure_key_vault_name = "test-kv"
     config.agent_name = "test-agent"
@@ -21,14 +21,14 @@ def mock_config():
 
 @pytest.fixture
 def mock_client():
-    """Create a mock AgentsClient."""
-    with patch("agents._base.client.AgentsClient") as mock_cls:
-        client = MagicMock()
-        mock_cls.return_value = client
-        yield client
+    """Create a mock AIProjectClient."""
+    with patch("agents._base.client.AIProjectClient") as mock_cls:
+        project_client = MagicMock()
+        mock_cls.return_value = project_client
+        yield project_client
 
 
 @pytest.fixture
 def mock_agents_client(mock_client):
-    """Create a mock agents client (same as mock_client in v2.0 SDK)."""
+    """Create a mock agents client (same as mock_client)."""
     return mock_client

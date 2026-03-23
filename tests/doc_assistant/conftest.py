@@ -14,7 +14,7 @@ def doc_assistant_config(tmp_path):
     instructions_file.write_text("You are a doc assistant agent.")
 
     with pytest.MonkeyPatch.context() as m:
-        m.setenv("FOUNDRY_PROJECT_CONNECTION_STRING", "test-conn-str")
+        m.setenv("AZURE_AI_PROJECT_ENDPOINT", "https://test-endpoint.services.ai.azure.com")
         config = DocAssistantConfig(
             agent_instructions_path=str(instructions_file),
         )

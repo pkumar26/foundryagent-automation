@@ -14,19 +14,19 @@ class TestFoundryBaseConfig:
     def test_loads_from_env_vars(self):
         """Config should load from environment variables."""
         env = {
-            "FOUNDRY_PROJECT_CONNECTION_STRING": "test-conn-str",
+            "AZURE_AI_PROJECT_ENDPOINT": "https://test-endpoint.services.ai.azure.com",
             "ENVIRONMENT": "qa",
             "AZURE_KEY_VAULT_NAME": "my-kv",
         }
         with patch.dict(os.environ, env, clear=False):
             config = FoundryBaseConfig()
-            assert config.foundry_project_connection_string == "test-conn-str"
+            assert config.azure_ai_project_endpoint == "https://test-endpoint.services.ai.azure.com"
             assert config.environment == "qa"
             assert config.azure_key_vault_name == "my-kv"
 
     def test_default_values(self):
         """Config should use defaults when env vars are not set."""
-        env = {"FOUNDRY_PROJECT_CONNECTION_STRING": "test-conn-str"}
+        env = {"AZURE_AI_PROJECT_ENDPOINT": "https://test-endpoint.services.ai.azure.com"}
         with patch.dict(os.environ, env, clear=False):
             config = FoundryBaseConfig()
             assert config.environment == "dev"

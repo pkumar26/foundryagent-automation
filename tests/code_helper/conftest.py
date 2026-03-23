@@ -14,7 +14,7 @@ def code_helper_config(tmp_path):
     instructions_file.write_text("You are a code helper agent.")
 
     with pytest.MonkeyPatch.context() as m:
-        m.setenv("FOUNDRY_PROJECT_CONNECTION_STRING", "test-conn-str")
+        m.setenv("AZURE_AI_PROJECT_ENDPOINT", "https://test-endpoint.services.ai.azure.com")
         config = CodeHelperConfig(
             agent_instructions_path=str(instructions_file),
         )
