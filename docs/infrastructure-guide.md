@@ -359,6 +359,8 @@ Customise these per environment before deploying.
 
 ## RBAC Roles
 
+### Automatically assigned (via `ci_principal_id`)
+
 When `ci_principal_id` is provided, the following roles are assigned to the CI/CD service principal:
 
 | Role | Scope | Purpose |
@@ -366,6 +368,28 @@ When `ci_principal_id` is provided, the following roles are assigned to the CI/C
 | **Contributor** | Resource Group | Manage all resources within the group |
 | **Key Vault Secrets User** | Key Vault | Read secrets during deployments |
 | **Cognitive Services User** | Foundry Resource | Access Foundry APIs (only if `use_existing_foundry = false`) |
+
+### Manually required (existing Foundry project)
+
+When `use_existing_foundry = true` (the default), the CI/CD service principal needs access to the **existing** Foundry resource to deploy agents. This role **must be assigned manually** since the Foundry resource is not managed by this template:
+
+| Role | Scope | Purpose |
+|------|-------|---------|
+| **Azure AI Developer** | AI Foundry project or account | Create and manage agents via the Foundry API |
+
+Assign it via Azure CLI:
+
+```bash
+# Get the service principal's Object ID
+SP_OBJECT_ID=$(az ad sp show --id <AZURE_CLIENT_ID> --query id -o tsv)
+
+# Assign Azure AI Developer on the Foundry resource
+az role assignment create \
+  --assignee-object-id "$SP_OBJECT_ID" \
+  --assignee-principal-type ServicePrincipal \
+  --role "Azure AI Developer" \
+  --scope "/subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.CognitiveServices/accounts/<foundry-name>"
+```
 
 To find your service principal's Object ID:
 
@@ -394,16 +418,21 @@ The `deploy.yml` GitHub Actions workflow automates infrastructure provisioning a
 
 ### Authentication
 
-The workflow uses **OIDC with Workload Identity Federation** — no client secrets required. Set up these GitHub secrets:
+The workflow uses **OIDC with Workload Identity Federation** — no client secrets required. Set up these GitHub **secrets**:
 
 | Secret | Description |
 |--------|-------------|
 | `AZURE_CLIENT_ID` | App registration Client ID |
 | `AZURE_TENANT_ID` | Azure AD Tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | Target subscription ID |
-| `AZURE_AI_PROJECT_ENDPOINT` | Azure AI project endpoint URL (when using existing project) |
 
-For Terraform remote state, also set:
+And these GitHub **variables** (Settings → Secrets and variables → Actions → Variables):
+
+| Variable | Description |
+|----------|-------------|
+| `AZURE_AI_PROJECT_ENDPOINT` | **Required when `use_existing_foundry = true`**. Your Azure AI Foundry project endpoint URL (not a secret — can be set at repo or org level) |
+
+For Terraform remote state, also set these **secrets**:
 
 | Secret | Description |
 |--------|-------------|
