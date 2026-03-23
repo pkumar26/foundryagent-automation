@@ -133,7 +133,7 @@ jobs:
             exit 1
           fi
           echo "region=${REGION}" >> "$GITHUB_OUTPUT"
-          echo "resourceGroup=${PREFIX}-rg-${{ env.ENVIRONMENT }}" >> "$GITHUB_OUTPUT"
+          echo "resourceGroup=rg-github-actions-dev" >> "$GITHUB_OUTPUT"
 
       - name: Provision shared infra (Bicep)
         if: env.INFRA_TOOL == 'bicep'
