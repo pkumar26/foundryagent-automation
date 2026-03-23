@@ -14,21 +14,22 @@ def agent_config(tmp_path):
     instructions_file.write_text("You are a helpful agent.")
 
     config = MagicMock()
-    config.foundry_project_connection_string = "test-conn-str"
+    config.azure_ai_project_endpoint = "https://test-endpoint.services.ai.azure.com"
     config.agent_name = "test-agent"
     config.agent_model = "gpt-4o"
     config.agent_instructions_path = str(instructions_file)
     config.knowledge_source_enabled = False
     config.code_interpreter_enabled = False
+    config.web_search_enabled = False
+    config.github_enabled = False
+    config.github_project_connection_id = ""
     return config
 
 
 @pytest.fixture
-def mock_agents_client():
-    """Create a mock agents client."""
+def mock_project_client():
+    """Create a mock project client with agents sub-client."""
     client = MagicMock()
-    # Default: no existing agents
-    client.list_agents.return_value = []
     return client
 
 
@@ -36,44 +37,39 @@ class TestCreateOrUpdateAgent:
     """Tests for the agent factory function."""
 
     @patch("agents._base.agent_factory._collect_agent_tools", return_value=[])
-    @patch("agents._base.agent_factory.get_client")
-    def test_creates_new_agent(self, mock_get_client, mock_tools, agent_config):
-        """Should create a new agent when none exists with the name."""
+    @patch("agents._base.agent_factory.get_project_client")
+    def test_creates_agent_version(self, mock_get_client, mock_tools, agent_config):
+        """Should create a new agent version via create_version."""
         mock_client = MagicMock()
-        mock_client.list_agents.return_value = []
         mock_get_client.return_value = mock_client
 
-        created_agent = MagicMock()
-        created_agent.id = "agent-123"
-        mock_client.create_agent.return_value = created_agent
+        agent_version = MagicMock()
+        agent_version.id = "agent-123"
+        agent_version.name = "test-agent"
+        agent_version.version = "1"
+        mock_client.agents.create_version.return_value = agent_version
 
         result = create_or_update_agent(agent_config)
 
-        mock_client.create_agent.assert_called_once()
-        assert result is created_agent
+        mock_client.agents.create_version.assert_called_once()
+        call_kwargs = mock_client.agents.create_version.call_args
+        assert call_kwargs.kwargs["agent_name"] == "test-agent"
+        assert result is agent_version
 
     @patch("agents._base.agent_factory._collect_agent_tools", return_value=[])
-    @patch("agents._base.agent_factory.get_client")
-    def test_updates_existing_agent(self, mock_get_client, mock_tools, agent_config):
-        """Should update an existing agent when one with the same name exists."""
-        existing_agent = MagicMock()
-        existing_agent.id = "agent-existing"
-        existing_agent.name = "test-agent"
-
+    @patch("agents._base.agent_factory.get_project_client")
+    def test_passes_prompt_agent_definition(self, mock_get_client, mock_tools, agent_config):
+        """Should construct PromptAgentDefinition with correct model/instructions."""
         mock_client = MagicMock()
-        mock_client.list_agents.return_value = [existing_agent]
         mock_get_client.return_value = mock_client
+        mock_client.agents.create_version.return_value = MagicMock(id="agent-123")
 
-        updated_agent = MagicMock()
-        updated_agent.id = "agent-existing"
-        mock_client.update_agent.return_value = updated_agent
+        create_or_update_agent(agent_config)
 
-        result = create_or_update_agent(agent_config)
-
-        mock_client.update_agent.assert_called_once()
-        call_kwargs = mock_client.update_agent.call_args
-        assert call_kwargs.kwargs["agent_id"] == "agent-existing"
-        assert result is updated_agent
+        call_kwargs = mock_client.agents.create_version.call_args
+        definition = call_kwargs.kwargs["definition"]
+        assert definition.model == "gpt-4o"
+        assert definition.instructions == "You are a helpful agent."
 
     def test_missing_instructions_raises_file_not_found(self, agent_config):
         """Should raise FileNotFoundError when instructions file doesn't exist."""
@@ -92,7 +88,7 @@ class TestCreateOrUpdateAgent:
             create_or_update_agent(agent_config)
 
     @patch("agents._base.agent_factory._collect_agent_tools", return_value=[])
-    @patch("agents._base.agent_factory.get_client")
+    @patch("agents._base.agent_factory.get_project_client")
     def test_conditional_knowledge_tool_not_appended_when_disabled(
         self, mock_get_client, mock_tools, agent_config
     ):
@@ -100,37 +96,135 @@ class TestCreateOrUpdateAgent:
         agent_config.knowledge_source_enabled = False
 
         mock_client = MagicMock()
-        mock_client.list_agents.return_value = []
-        mock_client.create_agent.return_value = MagicMock(id="agent-new")
+        mock_client.agents.create_version.return_value = MagicMock(id="agent-new")
         mock_get_client.return_value = mock_client
 
         create_or_update_agent(agent_config)
 
-        # Verify tools passed to create_agent are empty (no knowledge tool)
-        call_kwargs = mock_client.create_agent.call_args
-        assert call_kwargs.kwargs["tools"] == []
+        # Verify definition tools are empty (no knowledge tool)
+        call_kwargs = mock_client.agents.create_version.call_args
+        definition = call_kwargs.kwargs["definition"]
+        assert definition.tools == []
 
     @patch("agents._base.agent_factory._collect_agent_tools", return_value=[])
-    @patch("agents._base.agent_factory.get_client")
+    @patch("agents._base.agent_factory.get_project_client")
     def test_idempotent_multiple_calls(self, mock_get_client, mock_tools, agent_config):
-        """Running create_or_update multiple times should produce same state."""
+        """Running create_or_update multiple times should call create_version each time."""
         mock_client = MagicMock()
-
-        # First call: no existing agent
-        # Second call: agent now exists
-        existing = MagicMock()
-        existing.id = "agent-123"
-        existing.name = "test-agent"
-
-        mock_client.list_agents.side_effect = [[], [existing]]
-        mock_client.create_agent.return_value = MagicMock(id="agent-123")
-        mock_client.update_agent.return_value = MagicMock(id="agent-123")
+        mock_client.agents.create_version.return_value = MagicMock(id="agent-123")
         mock_get_client.return_value = mock_client
 
-        # First call creates
+        # First call
         create_or_update_agent(agent_config)
-        mock_client.create_agent.assert_called_once()
+        # Second call
+        create_or_update_agent(agent_config)
 
-        # Second call updates
+        assert mock_client.agents.create_version.call_count == 2
+
+    @patch("agents._base.agent_factory._collect_agent_tools", return_value=[])
+    @patch("agents._base.agent_factory.get_project_client")
+    def test_github_mcp_not_appended_when_disabled(self, mock_get_client, mock_tools, agent_config):
+        """Should not append GitHub MCP tool when disabled."""
+        agent_config.github_enabled = False
+
+        mock_client = MagicMock()
+        mock_client.agents.create_version.return_value = MagicMock(id="agent-new")
+        mock_get_client.return_value = mock_client
+
         create_or_update_agent(agent_config)
-        mock_client.update_agent.assert_called_once()
+
+        call_kwargs = mock_client.agents.create_version.call_args
+        definition = call_kwargs.kwargs["definition"]
+        assert definition.tools == []
+
+    @patch("agents._base.agent_factory._collect_agent_tools", return_value=[])
+    @patch("agents._base.agent_factory.get_project_client")
+    def test_code_interpreter_appended_when_enabled(
+        self, mock_get_client, mock_tools, agent_config
+    ):
+        """Should append CodeInterpreterTool when enabled."""
+        agent_config.code_interpreter_enabled = True
+
+        mock_client = MagicMock()
+        mock_client.agents.create_version.return_value = MagicMock(id="agent-new")
+        mock_get_client.return_value = mock_client
+
+        create_or_update_agent(agent_config)
+
+        call_kwargs = mock_client.agents.create_version.call_args
+        definition = call_kwargs.kwargs["definition"]
+        assert len(definition.tools) == 1
+        assert type(definition.tools[0]).__name__ == "CodeInterpreterTool"
+
+    @patch("agents._base.agent_factory._collect_agent_tools", return_value=[])
+    @patch("agents._base.agent_factory.get_project_client")
+    def test_web_search_not_appended_when_disabled(self, mock_get_client, mock_tools, agent_config):
+        """Should not append WebSearchTool when disabled."""
+        agent_config.web_search_enabled = False
+
+        mock_client = MagicMock()
+        mock_client.agents.create_version.return_value = MagicMock(id="agent-new")
+        mock_get_client.return_value = mock_client
+
+        create_or_update_agent(agent_config)
+
+        call_kwargs = mock_client.agents.create_version.call_args
+        definition = call_kwargs.kwargs["definition"]
+        assert definition.tools == []
+
+    @patch("agents._base.agent_factory._collect_agent_tools", return_value=[])
+    @patch("agents._base.agent_factory.get_project_client")
+    def test_web_search_appended_when_enabled(self, mock_get_client, mock_tools, agent_config):
+        """Should append WebSearchTool when enabled."""
+        agent_config.web_search_enabled = True
+
+        mock_client = MagicMock()
+        mock_client.agents.create_version.return_value = MagicMock(id="agent-new")
+        mock_get_client.return_value = mock_client
+
+        create_or_update_agent(agent_config)
+
+        call_kwargs = mock_client.agents.create_version.call_args
+        definition = call_kwargs.kwargs["definition"]
+        assert len(definition.tools) == 1
+        assert type(definition.tools[0]).__name__ == "WebSearchTool"
+
+    @patch("agents._base.agent_factory._collect_agent_tools", return_value=[])
+    @patch("agents._base.agent_factory.get_project_client")
+    def test_github_mcp_appended_when_enabled(self, mock_get_client, mock_tools, agent_config):
+        """Should append GitHub MCP tool when enabled with a connection ID."""
+        agent_config.github_enabled = True
+        agent_config.github_project_connection_id = "conn-github-123"
+
+        mock_client = MagicMock()
+        mock_client.agents.create_version.return_value = MagicMock(id="agent-new")
+        mock_get_client.return_value = mock_client
+
+        create_or_update_agent(agent_config)
+
+        call_kwargs = mock_client.agents.create_version.call_args
+        definition = call_kwargs.kwargs["definition"]
+        assert len(definition.tools) == 1
+        mcp_tool = definition.tools[0]
+        assert mcp_tool.server_label == "github"
+        assert mcp_tool.server_url == "https://api.githubcopilot.com/mcp"
+        assert mcp_tool.project_connection_id == "conn-github-123"
+
+    @patch("agents._base.agent_factory._collect_agent_tools", return_value=[])
+    @patch("agents._base.agent_factory.get_project_client")
+    def test_github_mcp_skipped_when_connection_id_empty(
+        self, mock_get_client, mock_tools, agent_config
+    ):
+        """Should skip GitHub MCP tool when enabled but connection ID is empty."""
+        agent_config.github_enabled = True
+        agent_config.github_project_connection_id = ""
+
+        mock_client = MagicMock()
+        mock_client.agents.create_version.return_value = MagicMock(id="agent-new")
+        mock_get_client.return_value = mock_client
+
+        create_or_update_agent(agent_config)
+
+        call_kwargs = mock_client.agents.create_version.call_args
+        definition = call_kwargs.kwargs["definition"]
+        assert definition.tools == []

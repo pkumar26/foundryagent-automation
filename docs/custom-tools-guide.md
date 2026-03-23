@@ -41,7 +41,7 @@ def add_numbers(a: int, b: int) -> str:
 
 
 # Export the tool — the factory picks this up automatically
-TOOLS = [create_function_tool([add_numbers])]
+TOOLS = [create_function_tool(add_numbers)]
 ```
 
 ### 2. Register in `__init__.py`
@@ -63,7 +63,7 @@ __all__ = ["TOOLS"]
 ### 3. Redeploy
 
 ```bash
-uv run python scripts/deploy_agent.py --agent code-helper
+uv run python scripts/deploy_agent.py --name code-helper
 ```
 
 The factory detects the updated `TOOLS` list and pushes the new tool definitions to Azure.
@@ -113,9 +113,9 @@ def search_docs(query: str) -> str:
     return do_search(query)
 ```
 
-## Grouping Multiple Functions
+## Registering Multiple Functions
 
-You can group related functions into a single `FunctionTool`. Functions in the same tool share a registration unit — group them when they're logically related:
+Each function becomes its own `FunctionTool`. Register them in the `TOOLS` list:
 
 ```python
 # agents/code_helper/tools/math_tools.py
@@ -148,16 +148,17 @@ def multiply(a: int, b: int) -> str:
     return str(a * b)
 
 
-# Both functions registered as one tool
-TOOLS = [create_function_tool([add, multiply])]
+# Both functions registered as separate tools
+TOOLS = [create_function_tool(add), create_function_tool(multiply)]
 ```
 
 Or keep them as separate tools if they serve different purposes:
 
 ```python
 TOOLS = [
-    create_function_tool([add, subtract]),      # arithmetic tool
-    create_function_tool([search_docs]),         # search tool
+    create_function_tool(add),               # arithmetic tool
+    create_function_tool(subtract),          # arithmetic tool
+    create_function_tool(search_docs),         # search tool
 ]
 ```
 
@@ -285,7 +286,7 @@ def read_file(filepath: str) -> str:
         return f"Error reading file: {e}"
 
 
-TOOLS = [create_function_tool([read_file])]
+TOOLS = [create_function_tool(read_file)]
 ```
 
 **2. Update `__init__.py`:**
@@ -339,7 +340,7 @@ class TestReadFile:
 
 ```bash
 uv run pytest tests/code_helper/test_file_reader.py -v
-uv run python scripts/deploy_agent.py --agent code-helper
+uv run python scripts/deploy_agent.py --name code-helper
 ```
 
 ## File Structure Reference
@@ -354,6 +355,78 @@ agents/code_helper/
 ```
 
 The factory in `agents/_base/agent_factory.py` imports `agents.{agent_name}.tools` and collects the `TOOLS` list automatically — no other wiring needed.
+
+## Platform Integrations
+
+Beyond custom function tools, the platform supports built-in integrations that are toggled per-agent via config fields or environment variables. The agent factory (`agents/_base/agent_factory.py`) attaches these automatically at deploy time.
+
+### Knowledge Source (Azure AI Search)
+
+Ground your agent's responses on your own data using Azure AI Search.
+
+1. Set the flags in your agent's `config.py`:
+   ```python
+   knowledge_source_enabled: bool = True
+   azure_ai_search_connection_id: str = "your-connection-id"
+   azure_ai_search_index_name: str = "your-index-name"
+   ```
+2. Implement `get_knowledge_tool()` in `agents/{module}/integrations/knowledge.py`.
+3. Redeploy.
+
+### Code Interpreter
+
+Let the agent execute Python code in a sandboxed environment.
+
+1. Add and set the flag in your agent's `config.py`:
+   ```python
+   code_interpreter_enabled: bool = True
+   ```
+2. Redeploy — no additional configuration needed.
+
+### Web Search
+
+Enable web search grounding so the agent can search the web for up-to-date information.
+
+1. Add and set the flag in your agent's `config.py`:
+   ```python
+   web_search_enabled: bool = True
+   ```
+   Or via environment variable:
+   ```bash
+   WEB_SEARCH_ENABLED=true
+   ```
+2. Redeploy — no additional configuration needed.
+
+### GitHub MCP
+
+Attach the GitHub MCP server configured in your Azure AI Foundry project. This gives your agent access to GitHub operations (repos, issues, PRs, etc.) via the MCP protocol.
+
+1. Ensure the GitHub MCP connection is configured in your Foundry project.
+2. Set the flags in your agent's `config.py`:
+   ```python
+   github_enabled: bool = True
+   github_project_connection_id: str = "your-github-connection-id"
+   ```
+   Or via environment variables:
+   ```bash
+   GITHUB_ENABLED=true
+   GITHUB_PROJECT_CONNECTION_ID=your-github-connection-id
+   ```
+3. Redeploy:
+   ```bash
+   uv run python scripts/deploy_agent.py --name my-agent
+   ```
+
+The factory uses `MCPTool` from the Azure AI Projects SDK with `server_label="github"` and the provided `project_connection_id`. Each agent controls its own `github_enabled` flag independently — enabling it for one agent does not affect others.
+
+### Integration Summary
+
+| Integration | Feature Flag | Connection Config | Requires Implementation? |
+|---|---|---|---|
+| Knowledge Source | `knowledge_source_enabled` | `azure_ai_search_connection_id` + `azure_ai_search_index_name` | Yes (`knowledge.py`) |
+| Code Interpreter | `code_interpreter_enabled` | — | No |
+| Web Search | `web_search_enabled` | — | No |
+| GitHub MCP | `github_enabled` | `github_project_connection_id` | No |
 
 ## Checklist
 

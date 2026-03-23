@@ -19,6 +19,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 REPO_ROOT = Path(__file__).resolve().parent.parent
 REGISTRY_PATH = REPO_ROOT / "agents" / "registry.py"
+PYPROJECT_PATH = REPO_ROOT / "pyproject.toml"
 AGENTS_DIR = REPO_ROOT / "agents"
 TESTS_DIR = REPO_ROOT / "tests"
 
@@ -157,7 +158,99 @@ def _template_config(
             knowledge_source_enabled: bool = False
             azure_ai_search_connection_id: str = ""
             azure_ai_search_index_name: str = ""
+            code_interpreter_enabled: bool = False
+            web_search_enabled: bool = False
+            github_enabled: bool = False
+            github_project_connection_id: str = ""
     ''')
+
+
+def _template_readme(
+    name: str,
+    display_name: str,
+    module_name: str,
+    class_prefix: str,
+    model: str,
+) -> str:
+    """Return README.md content for the scaffolded agent."""
+    config_cls = f"{class_prefix}Config"
+    return textwrap.dedent(f"""\
+        # {display_name} Agent
+
+        ![Agent](https://img.shields.io/badge/agent-{name}-blue)
+        ![Model](https://img.shields.io/badge/model-{model}-green)
+        ![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
+
+        A custom agent built on the Foundry Agent Platform.
+
+        ## Purpose
+
+        Describe the purpose and use cases of this agent.
+
+        ## Capabilities
+
+        | Capability | Description |
+        |---|---|
+        | General Q&A | Answers questions and provides guidance |
+
+        ## Tools
+
+        | Tool | Function | Description |
+        |---|---|---|
+        | `greet_user` | `agents/{module_name}/tools/sample_tool.py` | Sample greeting tool |
+
+        ## Configuration
+
+        | Setting | config.py Property | Default | Description |
+        |---|---|---|---|
+        | Agent name | `agent_name` | `{name}` | Registry identifier |
+        | Model | `agent_model` | `{model}` | Azure OpenAI deployment |
+        | Knowledge source | `knowledge_source_enabled` | `False` | Azure AI Search |
+        | Search connection | `azure_ai_search_connection_id` | — | AI Search connection ID |
+        | Search index | `azure_ai_search_index_name` | — | AI Search index |
+        | Code Interpreter | `code_interpreter_enabled` | `False` | Python execution |
+        | Web Search | `web_search_enabled` | `False` | Web search grounding |
+        | GitHub MCP | `github_enabled` | `False` | GitHub MCP server |
+        | GitHub connection | `github_project_connection_id` | — | GitHub connection name |
+
+        > **Note:** All integration settings are per-agent in `config.py`. The `.env` file is for shared infrastructure only.
+
+        ## File Structure
+
+        ```
+        agents/{module_name}/
+        ├── __init__.py
+        ├── config.py              # {config_cls} (extends FoundryBaseConfig)
+        ├── instructions.md        # System prompt
+        ├── README.md              # This file
+        ├── integrations/
+        │   ├── __init__.py
+        │   └── knowledge.py       # Azure AI Search integration stub
+        └── tools/
+            ├── __init__.py
+            └── sample_tool.py     # greet_user function
+        ```
+
+        ## Quick Start
+
+        ```bash
+        # Deploy
+        uv run python scripts/deploy_agent.py --name {name}
+
+        # Run interactively
+        uv run python -m agents._base.run {name}
+        ```
+
+        ## Testing
+
+        ```bash
+        # Unit tests
+        uv run pytest tests/{module_name}/ -v
+
+        # Skip integration tests
+        uv run pytest tests/{module_name}/ -v -m "not integration"
+        ```
+    """)
 
 
 def _template_instructions(display_name: str) -> str:
@@ -204,7 +297,7 @@ def _template_sample_tool(display_name: str) -> str:
 
 
         # Exported tools list — consumed by agent_factory via TOOLS
-        TOOLS = [create_function_tool([greet_user])]
+        TOOLS = [create_function_tool(greet_user)]
     ''')
 
 
@@ -217,7 +310,6 @@ def _template_tools_init(module_name: str) -> str:
 
         __all__ = ["TOOLS"]
     ''')
-
 
 
 def _template_knowledge(module_name: str) -> str:
@@ -271,7 +363,7 @@ def _template_conftest(module_name: str, config_class_name: str) -> str:
             instructions_file.write_text("You are a {agent_label} agent.")
 
             with pytest.MonkeyPatch.context() as m:
-                m.setenv("FOUNDRY_PROJECT_CONNECTION_STRING", "test-conn-str")
+                m.setenv("AZURE_AI_PROJECT_ENDPOINT", "https://test-endpoint.services.ai.azure.com")
                 config = {config_class_name}(
                     agent_instructions_path=str(instructions_file),
                 )
@@ -331,11 +423,11 @@ def _template_test_agent_create(module_name: str, agent_name: str) -> str:
 
         pytestmark = [pytest.mark.integration, pytest.mark.{marker}]
 
-        # Skip all tests in this module if no connection string
-        CONNECTION_STRING = os.environ.get("FOUNDRY_PROJECT_CONNECTION_STRING")
-        if not CONNECTION_STRING:
+        # Skip all tests in this module if no endpoint
+        ENDPOINT = os.environ.get("AZURE_AI_PROJECT_ENDPOINT")
+        if not ENDPOINT:
             pytest.skip(
-                "FOUNDRY_PROJECT_CONNECTION_STRING not set — skipping integration tests",
+                "AZURE_AI_PROJECT_ENDPOINT not set — skipping integration tests",
                 allow_module_level=True,
             )
 
@@ -347,41 +439,31 @@ def _template_test_agent_create(module_name: str, agent_name: str) -> str:
 
 
         @pytest.fixture
-        def agents_client():
-            """Create a real AgentsClient for integration testing."""
-            from azure.ai.agents import AgentsClient
+        def project_client():
+            """Create a real AIProjectClient for integration testing."""
+            from azure.ai.projects import AIProjectClient
             from azure.identity import DefaultAzureCredential
 
-            client = AgentsClient(
-                endpoint=CONNECTION_STRING,
+            return AIProjectClient(
+                endpoint=ENDPOINT,
                 credential=DefaultAzureCredential(),
             )
-            return client
-
-
-        @pytest.fixture
-        def cleanup_agent(agents_client, test_agent_name):
-            """Fixture that yields and then cleans up the test agent."""
-            yield
-            # Teardown: find and delete test agent
-            try:
-                for agent in agents_client.list_agents():
-                    if agent.name == test_agent_name:
-                        agents_client.delete_agent(agent.id)
-                        break
-            except Exception:
-                pass
 
 
         class TestAgentCreateIntegration:
             """Integration tests for agent creation against live Foundry."""
 
-            def test_create_agent(self, agents_client, test_agent_name, cleanup_agent):
-                """Should create a new agent in Foundry."""
-                agent = agents_client.create_agent(
+            def test_create_agent_version(self, project_client, test_agent_name):
+                """Should create a new agent version in Foundry."""
+                from azure.ai.projects.models import PromptAgentDefinition
+
+                definition = PromptAgentDefinition(
                     model="gpt-4o",
-                    name=test_agent_name,
                     instructions="You are a test agent.",
+                )
+                agent = project_client.agents.create_version(
+                    agent_name=test_agent_name,
+                    definition=definition,
                 )
                 assert agent.name == test_agent_name
     ''')
@@ -400,11 +482,11 @@ def _template_test_agent_run(module_name: str, agent_name: str) -> str:
 
         pytestmark = [pytest.mark.integration, pytest.mark.{marker}]
 
-        # Skip all tests in this module if no connection string
-        CONNECTION_STRING = os.environ.get("FOUNDRY_PROJECT_CONNECTION_STRING")
-        if not CONNECTION_STRING:
+        # Skip all tests in this module if no endpoint
+        ENDPOINT = os.environ.get("AZURE_AI_PROJECT_ENDPOINT")
+        if not ENDPOINT:
             pytest.skip(
-                "FOUNDRY_PROJECT_CONNECTION_STRING not set — skipping integration tests",
+                "AZURE_AI_PROJECT_ENDPOINT not set — skipping integration tests",
                 allow_module_level=True,
             )
 
@@ -416,72 +498,65 @@ def _template_test_agent_run(module_name: str, agent_name: str) -> str:
 
 
         @pytest.fixture
-        def agents_client():
-            """Create a real agents client."""
-            from azure.ai.agents import AgentsClient
+        def project_client():
+            """Create a real AIProjectClient."""
+            from azure.ai.projects import AIProjectClient
             from azure.identity import DefaultAzureCredential
 
-            client = AgentsClient(
-                endpoint=CONNECTION_STRING,
+            return AIProjectClient(
+                endpoint=ENDPOINT,
                 credential=DefaultAzureCredential(),
             )
-            return client
 
 
         @pytest.fixture
-        def test_agent(agents_client, test_agent_name):
-            """Create a test agent and clean up after."""
-            agent = agents_client.create_agent(
+        def test_agent(project_client, test_agent_name):
+            """Create a test agent version and return it."""
+            from azure.ai.projects.models import PromptAgentDefinition
+
+            definition = PromptAgentDefinition(
                 model="gpt-4o",
-                name=test_agent_name,
                 instructions="You are a test agent. Always respond with \'Test OK\'.",
             )
+            agent = project_client.agents.create_version(
+                agent_name=test_agent_name,
+                definition=definition,
+            )
             yield agent
-            # Teardown
-            try:
-                agents_client.delete_agent(agent.id)
-            except Exception:
-                pass
 
 
         class TestAgentRunIntegration:
             """Integration tests for the full agent run lifecycle."""
 
-            def test_full_run_lifecycle(self, agents_client, test_agent):
-                """Should create thread, post message, run agent, and get response."""
-                from azure.ai.agents.models import MessageRole, RunStatus
+            def test_full_conversation_lifecycle(self, project_client, test_agent):
+                """Should create conversation, get response, and cleanup."""
+                openai_client = project_client.get_openai_client()
 
-                # Create thread
-                thread = agents_client.threads.create()
-                assert thread.id is not None
+                # Create conversation with initial message
+                conversation = openai_client.conversations.create(
+                    items=[{{"type": "message", "role": "user", "content": "Hello!"}}],
+                )
+                assert conversation.id is not None
 
                 try:
-                    # Post message
-                    agents_client.messages.create(
-                        thread_id=thread.id,
-                        role="user",
-                        content="Hello!",
+                    # Get agent response
+                    response = openai_client.responses.create(
+                        conversation=conversation.id,
+                        extra_body={{
+                            "agent_reference": {{
+                                "name": test_agent.name,
+                                "type": "agent_reference",
+                            }}
+                        }},
                     )
 
-                    # Run agent
-                    run = agents_client.runs.create_and_process(
-                        thread_id=thread.id,
-                        agent_id=test_agent.id,
-                    )
-
-                    assert run.status == RunStatus.COMPLETED
-
-                    # Get response
-                    last_msg = agents_client.messages.get_last_message_text_by_role(
-                        thread_id=thread.id,
-                        role=MessageRole.AGENT,
-                    )
-
-                    assert last_msg is not None
-                    assert len(last_msg.text.value) > 0
+                    assert response.output_text is not None
+                    assert len(response.output_text) > 0
                 finally:
                     try:
-                        agents_client.threads.delete(thread.id)
+                        openai_client.conversations.delete(
+                            conversation_id=conversation.id
+                        )
                     except Exception:
                         pass
     ''')
@@ -505,6 +580,10 @@ def _generate_agent_files(
         (base / "__init__.py", ""),
         (base / "config.py", _template_config(class_prefix, name, model, module_name)),
         (base / "instructions.md", _template_instructions(display_name)),
+        (
+            base / "README.md",
+            _template_readme(name, display_name, module_name, class_prefix, model),
+        ),
         (base / "tools" / "__init__.py", _template_tools_init(module_name)),
         (base / "tools" / "sample_tool.py", _template_sample_tool(display_name)),
         (base / "integrations" / "__init__.py", ""),
@@ -593,8 +672,40 @@ def _update_registry(
         _error(f"Could not find REGISTRY closing in {path}")
         return
 
-    content = content[:closing_pos] + "        " + entry + content[closing_pos:]
+    indented_entry = textwrap.indent(entry, "        ")
+    content = content[:closing_pos] + indented_entry + content[closing_pos:]
 
+    path.write_text(content, encoding="utf-8")
+
+
+def _update_pyproject_markers(
+    module_name: str,
+    agent_name: str,
+    pyproject_path: Path | None = None,
+) -> None:
+    """Register a pytest marker for the new agent in pyproject.toml."""
+    path = pyproject_path or PYPROJECT_PATH
+    if not path.exists():
+        return
+
+    content = path.read_text(encoding="utf-8")
+    marker_entry = f'    "{module_name}: marks tests for the {agent_name} agent",\n'
+
+    # Skip if marker already registered
+    if f'"{module_name}:' in content:
+        return
+
+    # Find the markers = [ ... ] section and insert before closing ]
+    markers_start = content.find("markers = [")
+    if markers_start == -1:
+        _info("Could not find markers list in pyproject.toml; skipping marker registration")
+        return
+
+    markers_close = content.find("]", markers_start + len("markers = ["))
+    if markers_close == -1:
+        return
+
+    content = content[:markers_close] + marker_entry + content[markers_close:]
     path.write_text(content, encoding="utf-8")
 
 
@@ -712,6 +823,7 @@ def main(argv: list[str] | None = None) -> int:
         agent_files = _generate_agent_files(name, module_name, class_prefix, model, display_name)
         test_files = _generate_test_files(name, module_name, class_prefix, display_name)
         _update_registry(name, module_name, config_cls)
+        _update_pyproject_markers(module_name, name)
     except OSError as exc:
         _error(str(exc))
         return 2
@@ -729,7 +841,7 @@ def main(argv: list[str] | None = None) -> int:
     _info(f"  1. Edit agents/{module_name}/instructions.md with agent instructions")
     _info(f"  2. Add custom tools in agents/{module_name}/tools/")
     _info(f"  3. Run tests: uv run pytest tests/{module_name}/ -v")
-    _info(f"  4. Deploy: uv run python scripts/deploy_agent.py --agent {name}")
+    _info(f"  4. Deploy: uv run python scripts/deploy_agent.py --name {name}")
 
     return 0
 

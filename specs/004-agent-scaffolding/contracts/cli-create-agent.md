@@ -48,7 +48,7 @@ On success, prints a summary to stdout:
 [scaffold]   1. Edit agents/my_agent/instructions.md with agent instructions
 [scaffold]   2. Add custom tools in agents/my_agent/tools/
 [scaffold]   3. Run tests: pytest tests/my_agent/ -v
-[scaffold]   4. Deploy: python scripts/deploy_agent.py --agent my-agent
+[scaffold]   4. Deploy: python scripts/deploy_agent.py --name my-agent
 ```
 
 On error, prints to stderr:

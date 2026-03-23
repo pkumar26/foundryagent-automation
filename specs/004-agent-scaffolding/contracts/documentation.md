@@ -14,7 +14,7 @@
 
 1. Create folder: `agents/<new_agent>/` with `config.py`, `instructions.md`, `tools/`, `integrations/`
 2. Add one entry to `agents/registry.py`
-3. Deploy: `python scripts/deploy_agent.py --agent <new-agent>`
+3. Deploy: `python scripts/deploy_agent.py --name <new-agent>`
 
 Zero changes to existing agents or shared code required.
 ```
@@ -44,7 +44,7 @@ See the [Scaffolding Guide](docs/scaffolding-guide.md) for YAML format, customis
 
 1. Create folder: `agents/<new_agent>/` with `config.py`, `instructions.md`, `tools/`, `integrations/`
 2. Add one entry to `agents/registry.py`
-3. Deploy: `python scripts/deploy_agent.py --agent <new-agent>`
+3. Deploy: `python scripts/deploy_agent.py --name <new-agent>`
 
 Zero changes to existing agents or shared code required.
 ```

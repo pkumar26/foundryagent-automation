@@ -33,7 +33,8 @@ tests/                  # Unit + integration tests mirroring agents/ structure
 notebooks/              # Interactive onboarding guides
 scripts/                # CLI deploy + agent scaffolding
 ├── deploy_agent.py     # CLI deploy script
-└── create_agent.py     # CLI agent scaffolding
+├── create_agent.py     # CLI agent scaffolding
+└── delete_agent.py     # CLI agent removal
 docs/                   # Guides and reference documentation
 .github/workflows/      # CI/CD pipelines (test + deploy)
 ```
@@ -44,7 +45,7 @@ docs/                   # Guides and reference documentation
 |----------|----------|----------|
 | **Foundry project** | Use existing (`use_existing_foundry=true`) | Provision new (`use_existing_foundry=false`) |
 | **Infrastructure** | Terraform (`infra/terraform/`) | Bicep (`infra/bicep/`) |
-| **Deploy target** | Single agent (`--agent <name>`) | All agents (`--all`) |
+| **Deploy target** | Single agent (`--name <name>`) | All agents (`--all`) |
 
 ## Quick Start
 
@@ -53,7 +54,7 @@ docs/                   # Guides and reference documentation
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) (install: `curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - Azure CLI authenticated (`az login`)
-- An Azure AI Foundry project connection string
+- An Azure AI Foundry project endpoint URL
 
 ### Setup
 
@@ -64,13 +65,13 @@ cd foundryagent-automation
 uv sync
 
 cp .env.example .env
-# Edit .env with your FOUNDRY_PROJECT_CONNECTION_STRING
+# Edit .env with your AZURE_AI_PROJECT_ENDPOINT
 ```
 
 ### Deploy Your First Agent
 
 ```bash
-uv run python scripts/deploy_agent.py --agent code-helper
+uv run python scripts/deploy_agent.py --name code-helper
 ```
 
 ### Deploy All Agents
@@ -87,10 +88,10 @@ uv sync --group dev
 # Unit tests (no Azure credentials needed)
 uv run pytest tests/ -m "not integration" -v
 
-# Integration tests (requires FOUNDRY_PROJECT_CONNECTION_STRING)
+# Integration tests (requires AZURE_AI_PROJECT_ENDPOINT)
 # pydantic-settings loads .env from the working directory automatically.
 # When running from a different directory, export the variable manually:
-export FOUNDRY_PROJECT_CONNECTION_STRING=$(grep FOUNDRY_PROJECT_CONNECTION_STRING .env | cut -d= -f2-)
+export AZURE_AI_PROJECT_ENDPOINT=$(grep AZURE_AI_PROJECT_ENDPOINT .env | cut -d= -f2-)
 uv run pytest tests/ -m integration -v
 
 # Tests for a specific agent
@@ -116,11 +117,23 @@ This generates the full agent directory (`agents/my_agent/`), test stubs (`tests
 
 See the [Scaffolding Guide](docs/scaffolding-guide.md) for YAML format, customisation, FAQ, and troubleshooting.
 
+### Delete an Agent
+
+```bash
+# Remove an agent from the codebase (with confirmation prompt)
+uv run python scripts/delete_agent.py --name my-agent
+
+# Skip confirmation
+uv run python scripts/delete_agent.py --name my-agent --force
+```
+
+This removes the agent directory, test directory, and registry entry.
+
 ### Manual
 
 1. Create folder: `agents/<new_agent>/` with `config.py`, `instructions.md`, `tools/`, `integrations/`
 2. Add one entry to `agents/registry.py`
-3. Deploy: `uv run python scripts/deploy_agent.py --agent <new-agent>`
+3. Deploy: `uv run python scripts/deploy_agent.py --name <new-agent>`
 
 Zero changes to existing agents or shared code required.
 
@@ -130,7 +143,7 @@ Interactive onboarding for developers new to Azure AI Foundry:
 
 - **[01_setup_and_connect.ipynb](notebooks/01_setup_and_connect.ipynb)** — Connect to Foundry (existing or new)
 - **[02_build_and_run_agent.ipynb](notebooks/02_build_and_run_agent.ipynb)** — Create, run, and interact with an agent
-- **[03_scaffold_agent.ipynb](notebooks/03_scaffold_agent.ipynb)** — Scaffold a new agent end-to-end
+- **[03_scaffold_agent.ipynb](notebooks/03_scaffold_agent.ipynb)** — Scaffold, deploy, and delete an agent end-to-end
 
 ## Programmatic API
 
@@ -196,6 +209,19 @@ print(response)
 | `agent_name` | yes | Kebab-case name for the new agent (e.g. `my-agent`) |
 
 Authentication uses OIDC (Workload Identity Federation) — no client secrets.
+
+## Integrations
+
+The platform supports per-agent opt-in integrations — enable them in each agent's `config.py`:
+
+| Integration | config.py Property | Additional Properties | Description |
+|---|---|---|---|
+| **Knowledge Source** (Azure AI Search) | `knowledge_source_enabled = True` | `azure_ai_search_connection_id`, `azure_ai_search_index_name` | Ground agent responses in your own data |
+| **Code Interpreter** | `code_interpreter_enabled = True` | — | Let the agent execute Python code |
+| **Web Search** | `web_search_enabled = True` | — | Enable web search grounding |
+| **GitHub MCP** | `github_enabled = True` | `github_project_connection_id` | Attach the GitHub MCP server configured in your Foundry project |
+
+Each agent controls its own flags — set `github_enabled: bool = True` in one agent's config without affecting others. The `.env` file is for shared infrastructure only (endpoint, environment, key vault). See the [Custom Tools Guide](docs/custom-tools-guide.md) for details.
 
 ## Infrastructure
 

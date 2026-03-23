@@ -105,5 +105,5 @@ module rbacCognitiveUser 'modules/rbac-cognitive-user.bicep' = if (!useExistingF
 // Outputs
 output resourceGroupName string = rg.name
 output keyVaultName string = keyVault.outputs.keyVaultName
-// Note: camelCase to match Bicep conventions. Deploy workflow maps this to FOUNDRY_PROJECT_CONNECTION_STRING.
-output projectConnectionString string = useExistingFoundry ? '' : foundryResource.outputs.endpoint
+// Note: camelCase to match Bicep conventions. Deploy workflow maps this to AZURE_AI_PROJECT_ENDPOINT.
+output projectEndpoint string = useExistingFoundry ? '' : foundryResource.outputs.endpoint
