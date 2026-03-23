@@ -33,7 +33,7 @@ Output:
 [scaffold]   1. Edit agents/my_agent/instructions.md with agent instructions
 [scaffold]   2. Add custom tools in agents/my_agent/tools/
 [scaffold]   3. Run tests: uv run pytest tests/my_agent/ -v
-[scaffold]   4. Deploy: uv run python scripts/deploy_agent.py --agent my-agent
+[scaffold]   4. Deploy: uv run python scripts/deploy_agent.py --name my-agent
 ```
 
 ## CLI Reference
@@ -109,6 +109,7 @@ agents/{module_name}/
 ├── __init__.py              # Package init
 ├── config.py                # Agent configuration (extends FoundryBaseConfig)
 ├── instructions.md          # System instructions (markdown)
+├── README.md                # Agent documentation with badges, config, and usage
 ├── tools/
 │   ├── __init__.py          # Exports TOOLS list
 │   └── sample_tool.py       # Sample greeting tool
@@ -126,7 +127,7 @@ tests/{module_name}/
 agents/registry.py           # Updated with import + AgentRegistryEntry
 ```
 
-**Total**: 12 files created + 1 file updated = 13 file operations
+**Total**: 13 files created + 1 file updated = 14 file operations
 
 ## Customise Your Agent
 
@@ -149,7 +150,7 @@ def search_docs(query: str) -> str:
     # Your implementation here
     return f"Results for: {query}"
 
-TOOLS = [create_function_tool([search_docs])]
+TOOLS = [create_function_tool(search_docs)]
 ```
 
 Update `agents/{module_name}/tools/__init__.py` to import your new tools.
@@ -172,13 +173,26 @@ class MyAgentConfig(FoundryBaseConfig):
 
 ### 4. Enable Integrations
 
-To enable knowledge source, set the flag in your config:
+Enable per-agent integrations by setting flags in your config:
 
 ```python
+# Knowledge source (Azure AI Search)
 knowledge_source_enabled: bool = True
+azure_ai_search_connection_id: str = "your-connection-id"
+azure_ai_search_index_name: str = "your-index-name"
+
+# Code Interpreter (sandboxed Python execution)
+code_interpreter_enabled: bool = True
+
+# Web Search (web search grounding)
+web_search_enabled: bool = True
+
+# GitHub MCP (attach GitHub MCP server from your Foundry project)
+github_enabled: bool = True
+github_project_connection_id: str = "your-github-connection-id"
 ```
 
-Then implement the integration functions in `agents/{module_name}/integrations/`.
+For knowledge source, also implement the integration function in `agents/{module_name}/integrations/knowledge.py`. Code Interpreter, Web Search, and GitHub MCP require no additional code — just set the flag (and connection ID for GitHub MCP).
 
 ### 5. Write Tests
 
@@ -192,7 +206,7 @@ uv run pytest tests/my_agent/ -v
 ### 6. Deploy
 
 ```bash
-uv run python scripts/deploy_agent.py --agent my-agent
+uv run python scripts/deploy_agent.py --name my-agent
 ```
 
 ## FAQ
@@ -203,7 +217,21 @@ There is no automated rename command. You need to: (1) rename the directory unde
 
 **How do I delete a scaffolded agent?**
 
-Remove three things: (1) the agent directory `agents/{module_name}/`, (2) the test directory `tests/{module_name}/`, (3) the import and `AgentRegistryEntry` in `agents/registry.py`.
+Use the deletion script:
+
+```bash
+# With confirmation prompt
+uv run python scripts/delete_agent.py --name my-agent
+
+# Skip confirmation
+uv run python scripts/delete_agent.py --name my-agent --force
+```
+
+This removes: (1) the agent directory `agents/{module_name}/`, (2) the test directory `tests/{module_name}/`, (3) the import and `AgentRegistryEntry` in `agents/registry.py`.
+
+You can also delete an agent interactively via **Step 6** in the [03_scaffold_agent.ipynb](../notebooks/03_scaffold_agent.ipynb) notebook.
+
+> **Note:** This only removes the agent from the codebase. To also delete the agent from Azure AI Foundry, use the portal or the SDK.
 
 **How do I add more tools to my agent?**
 
@@ -216,6 +244,10 @@ Edit `agents/{module_name}/config.py` and update the `agent_model` field's defau
 **How do I enable knowledge source integration?**
 
 Set `knowledge_source_enabled: bool = True` in your agent's config class, then implement the corresponding function in the `integrations/` directory.
+
+**How do I enable GitHub MCP for my agent?**
+
+Set `github_enabled: bool = True` and `github_project_connection_id: str = "your-connection-id"` in your agent's config class, or set `GITHUB_ENABLED=true` and `GITHUB_PROJECT_CONNECTION_ID=...` as environment variables. The GitHub MCP connection must already be configured in your Azure AI Foundry project.
 
 **Can I scaffold multiple agents at once?**
 

@@ -156,8 +156,8 @@ ci_principal_id         = ""
 
 Edit the appropriate `.tfvars` file for your environment. Key decisions:
 
-- **`use_existing_foundry = true`** (default): Skip Foundry resource creation — you already have a Foundry project and connection string.
-- **`use_existing_foundry = false`**: Provision a new CognitiveServices/AIServices resource and generate a connection string.
+- **`use_existing_foundry = true`** (default): Skip Foundry resource creation — you already have a Foundry project and endpoint URL.
+- **`use_existing_foundry = false`**: Provision a new CognitiveServices/AIServices resource and generate an endpoint URL.
 - **`enable_knowledge_source = true`**: Provision an Azure AI Search service for RAG/knowledge source scenarios.
 - **`ci_principal_id`**: Set this to the Object ID of your CI/CD service principal to assign RBAC roles automatically.
 
@@ -188,14 +188,14 @@ terraform output resource_group_name
 # Key Vault name
 terraform output key_vault_name
 
-# Foundry connection string (sensitive — only shown explicitly)
-terraform output -raw project_connection_string
+# Foundry project endpoint (sensitive — only shown explicitly)
+terraform output -raw project_endpoint
 ```
 
-Use the connection string in your `.env`:
+Use the endpoint in your `.env`:
 
 ```bash
-echo "FOUNDRY_PROJECT_CONNECTION_STRING=$(terraform output -raw project_connection_string)" >> ../../.env
+echo "AZURE_AI_PROJECT_ENDPOINT=$(terraform output -raw project_endpoint)" >> ../../.env
 ```
 
 ### 6. Destroy Infrastructure
@@ -311,7 +311,7 @@ az group delete --name foundryagent-rg-dev --yes --no-wait
 | Use existing Foundry | `use_existing_foundry` | `useExistingFoundry` | bool | `true` | Skip Foundry provisioning if you already have a project |
 | Enable AI Search | `enable_knowledge_source` | `enableKnowledgeSource` | bool | `false` | Provision Azure AI Search for knowledge source |
 | CI/CD principal | `ci_principal_id` | `ciPrincipalId` | string | `""` | Object ID of CI/CD identity for RBAC assignments |
-| Existing connection string | `existing_foundry_connection_string` | _N/A_ | string | `""` | (Terraform only) Connection string when using existing Foundry |
+| Existing endpoint | `existing_foundry_endpoint` | _N/A_ | string | `""` | (Terraform only) Endpoint URL when using existing Foundry |
 
 ---
 
@@ -401,7 +401,7 @@ The workflow uses **OIDC with Workload Identity Federation** — no client secre
 | `AZURE_CLIENT_ID` | App registration Client ID |
 | `AZURE_TENANT_ID` | Azure AD Tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | Target subscription ID |
-| `FOUNDRY_PROJECT_CONNECTION_STRING` | Foundry connection string (when using existing project) |
+| `AZURE_AI_PROJECT_ENDPOINT` | Azure AI project endpoint URL (when using existing project) |
 
 For Terraform remote state, also set:
 
@@ -424,7 +424,7 @@ For Terraform remote state, also set:
 
 ### Scenario 1: Use an Existing Foundry Project (Default)
 
-You already have an Azure AI Foundry project and connection string. Infrastructure only creates the resource group and Key Vault.
+You already have an Azure AI Foundry project and endpoint URL. Infrastructure only creates the resource group and Key Vault.
 
 ```bash
 # Terraform
@@ -432,20 +432,20 @@ terraform apply -var-file=envs/dev.tfvars
 # use_existing_foundry is already true in dev.tfvars
 
 # Then configure your .env
-echo "FOUNDRY_PROJECT_CONNECTION_STRING=<your-connection-string>" >> .env
+echo "AZURE_AI_PROJECT_ENDPOINT=<your-project-endpoint>" >> .env
 ```
 
 ### Scenario 2: Provision a New Foundry Project
 
-Set `use_existing_foundry = false` in your parameter file, then deploy. The connection string will be available in the outputs.
+Set `use_existing_foundry = false` in your parameter file, then deploy. The endpoint URL will be available in the outputs.
 
 ```bash
 # Terraform
 sed -i 's/use_existing_foundry.*=.*/use_existing_foundry = false/' envs/dev.tfvars
 terraform apply -var-file=envs/dev.tfvars
 
-# Grab the connection string
-terraform output -raw project_connection_string
+# Grab the endpoint
+terraform output -raw project_endpoint
 ```
 
 ```bash
