@@ -371,24 +371,51 @@ When `ci_principal_id` is provided, the following roles are assigned to the CI/C
 
 ### Manually required (existing Foundry project)
 
-When `use_existing_foundry = true` (the default), the CI/CD service principal needs access to the **existing** Foundry resource to deploy agents. This role **must be assigned manually** since the Foundry resource is not managed by this template:
+When `use_existing_foundry = true` (the default), the CI/CD service principal needs data-plane access to deploy agents. These roles **must be assigned manually** since the Foundry resource is not managed by this template.
 
-| Role | Scope | Purpose |
-|------|-------|---------|
-| **Azure AI Developer** | AI Foundry project or account | Create and manage agents via the Foundry API |
+#### Required roles
 
-Assign it via Azure CLI:
+| Role | Purpose | Key data actions |
+|------|---------|------------------|
+| **Azure AI User** | **Mandatory** for agent deployment | `agents/read`, `agents/write`, `agents/delete` |
+| **Azure AI Developer** | Broader development access (models, connections, etc.) | Includes AI User actions plus additional capabilities |
+
+> **Important:** `Azure AI Developer` ≠ `Azure AI User`. You typically need **both**, but **Azure AI User** is the minimum role that grants the `Microsoft.CognitiveServices/accounts/AIServices/agents/write` data action required for agent deployment.
+
+#### Valid scopes
+
+The role must be assigned to a scope that covers the Foundry resource. Any **one** of these works (higher is easier while testing):
+
+| Scope | Example |
+|-------|---------|
+| **Resource Group** (containing the Foundry resource) | `/subscriptions/<sub-id>/resourceGroups/<rg>` |
+| **Foundry account** (`Microsoft.CognitiveServices/accounts`) | `/subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.CognitiveServices/accounts/<foundry-name>` |
+| **Foundry project** | `.../accounts/<foundry-name>/projects/<project-name>` |
+
+> **Note:** Assigning roles only at the subscription scope is not always honored for Foundry data-plane checks. Assign at the resource group or Foundry resource level.
+
+#### Assign via Azure CLI
 
 ```bash
 # Get the service principal's Object ID
 SP_OBJECT_ID=$(az ad sp show --id <AZURE_CLIENT_ID> --query id -o tsv)
 
-# Assign Azure AI Developer on the Foundry resource
+# Scope: the Foundry account (recommended)
+SCOPE="/subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.CognitiveServices/accounts/<foundry-name>"
+
+# 1. Azure AI User — required for agent CRUD
+az role assignment create \
+  --assignee-object-id "$SP_OBJECT_ID" \
+  --assignee-principal-type ServicePrincipal \
+  --role "Azure AI User" \
+  --scope "$SCOPE"
+
+# 2. Azure AI Developer — recommended for full development access
 az role assignment create \
   --assignee-object-id "$SP_OBJECT_ID" \
   --assignee-principal-type ServicePrincipal \
   --role "Azure AI Developer" \
-  --scope "/subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.CognitiveServices/accounts/<foundry-name>"
+  --scope "$SCOPE"
 ```
 
 To find your service principal's Object ID:
@@ -400,6 +427,8 @@ az ad sp show --id <app-id> --query id -o tsv
 # For the currently logged-in user
 az ad signed-in-user show --query id -o tsv
 ```
+
+For the full list of minimum role assignments, see the [Azure AI Foundry permissions documentation](https://aka.ms/FoundryPermissions).
 
 ---
 
