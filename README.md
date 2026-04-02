@@ -237,4 +237,6 @@ See the **[Infrastructure Guide](docs/infrastructure-guide.md)** for step-by-ste
 
 ## License
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
